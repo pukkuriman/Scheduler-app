@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>日程調整</title>
+<!-- Google AdSense: YOUR_PUBLISHER_ID を自分のパブリッシャーIDに差し替えてください -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID"
+     crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f5f6fa;
+  --surface:   #ffffff;
+  --surface2:  #f0f1f6;
+  --border:    #dde0ea;
+  --border2:   #c8ccd8;
+  --text:      #1a1d2e;
+  --muted:     #7c82a0;
+  --accent:    #4f6ef7;
+  --accent-lt: #eef1fe;
+  --accent2:   #3a57e8;
+  --blue:      rgba(79,110,247,0.18);
+  --blue-bdr:  #4f6ef7;
+  --blue-fill: rgba(79,110,247,0.13);
+  --red:       rgba(239,68,68,0.13);
+  --red-bdr:   #ef4444;
+  --green:     #16a34a;
+  --shadow:    0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  --radius:    12px;
+  font-family: 'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif;
+  font-size: 15px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+}
+
+#app { width: 100%; }
+
+/* 非トップ画面はコンテンツを中央に制限 */
+.screen:not(.top-screen) {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 36px 20px 80px;
+}
+
+.screen { animation: fadeUp .2s ease both; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ===== ボタン ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 8px; padding: 11px 22px;
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+  transition: background .15s, box-shadow .15s, transform .1s;
+  text-decoration: none; letter-spacing: .01em;
+}
+.btn:active { transform: scale(.98); }
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 8px rgba(79,110,247,.3);
+}
+.btn-primary:hover { background: var(--accent2); box-shadow: 0 4px 12px rgba(79,110,247,.4); }
+.btn-secondary {
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { background: var(--surface2); color: var(--text); }
+
+/* ===== 設定画面 ===== */
+.setup-screen { max-width: 480px; }
+
+.app-title {
+  font-size: 1.9rem; font-weight: 800; letter-spacing: -.04em;
+  color: var(--text); margin-bottom: 6px;
+}
+.app-title span {
+  background: linear-gradient(120deg, var(--accent), #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.subtitle { color: var(--muted); font-size: .87rem; margin-bottom: 32px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  margin-bottom: 16px;
+}
+
+.setup-form { display: flex; flex-direction: column; gap: 20px; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field > label {
+  font-size: .8rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.field input[type="date"],
+.field select {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  padding: 9px 13px; font-size: .93rem; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.field input[type="date"]:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+}
+
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+
+.number-row { display: flex; align-items: center; gap: 14px; }
+.num-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  color: var(--text); font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.num-btn:hover { background: var(--accent-lt); border-color: var(--accent); color: var(--accent); }
+#count-val { font-size: 1.25rem; font-weight: 700; min-width: 28px; text-align: center; color: var(--text); }
+
+/* 精度ラジオ */
+.radio-group { display: flex; gap: 8px; }
+.radio-opt {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 9px 12px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 8px; cursor: pointer; font-size: .88rem; font-weight: 500;
+  transition: all .15s; user-select: none;
+}
+.radio-opt input { display: none; }
+.radio-opt:has(input:checked) {
+  background: var(--accent-lt); border-color: var(--accent); color: var(--accent);
+}
+.radio-opt .dot-icon {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid currentColor; position: relative; flex-shrink: 0;
+}
+.radio-opt:has(input:checked) .dot-icon::after {
+  content: ''; position: absolute; inset: 2px;
+  background: var(--accent); border-radius: 50%;
+}
+
+/* ===== グリッド画面 ===== */
+.grid-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.person-label { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+.organizer-badge {
+  display: inline-block; font-size: .72rem; font-weight: 600;
+  background: var(--accent-lt); color: var(--accent);
+  border: 1px solid rgba(79,110,247,.25);
+  border-radius: 99px; padding: 2px 9px; margin-left: 7px;
+  vertical-align: middle;
+}
+.header-hint { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+
+.dots { display: flex; gap: 7px; padding-top: 4px; align-items: center; }
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--border2); transition: background .2s;
+}
+.dot.done   { background: var(--accent); opacity: .4; }
+.dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,110,247,.2);
+}
+
+/* テーブル */
+.schedule-table {
+  width: 100%; border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.schedule-table th {
+  background: var(--surface2);
+  font-size: .75rem; color: var(--muted);
+  padding: 9px 14px; text-align: left; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.schedule-table td { border-bottom: 1px solid var(--border); vertical-align: middle; }
+.schedule-table tr:last-child td { border-bottom: none; }
+.schedule-table tr:hover td { background: rgba(79,110,247,.025); }
+
+.date-cell {
+  padding: 7px 14px; white-space: nowrap;
+  font-size: .82rem; min-width: 78px;
+}
+.date-main { font-weight: 600; color: var(--text); }
+.date-dow  { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+.weekend .date-cell { background: #faf8ff; }
+.weekend .date-main { color: #6366f1; }
+
+.bar-cell { padding: 7px 14px 14px; width: 100%; }
+
+/* ===== 時間バー ===== */
+.bar-wrap {
+  position: relative; height: 38px; border-radius: 7px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  cursor: ew-resize; touch-action: none; overflow: visible;
+}
+.bar-wrap:hover { border-color: var(--border2); }
+
+.bar-red-left, .bar-red-right {
+  position: absolute; top: 0; height: 100%;
+  background: var(--red); pointer-events: none;
+}
+.bar-red-left  { left: 0; border-radius: 6px 0 0 6px; border-right: 1.5px solid var(--red-bdr); }
+.bar-red-right { right: 0; border-radius: 0 6px 6px 0; border-left: 1.5px solid var(--red-bdr); }
+
+.bar-blue {
+  position: absolute; top: 0; height: 100%;
+  background: var(--blue-fill); pointer-events: none;
+}
+
+.handle {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px; height: 28px;
+  background: var(--accent); border-radius: 4px;
+  cursor: ew-resize; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(79,110,247,.4);
+  transition: background .1s, box-shadow .1s;
+}
+.handle:hover {
+  background: var(--accent2);
+  box-shadow: 0 3px 12px rgba(79,110,247,.5);
+}
+.handle::after {
+  content: '';
+  width: 2px; height: 11px;
+  background: rgba(255,255,255,.5);
+  border-radius: 2px;
+  box-shadow: 3px 0 0 rgba(255,255,255,.5), -3px 0 0 rgba(255,255,255,.5);
+}
+
+/* 前の人の範囲を薄く表示 */
+.bar-prev {
+  position: absolute; top: 4px; height: calc(100% - 8px);
+  background: rgba(79,110,247,.07);
+  border: 1px dashed rgba(79,110,247,.3);
+  border-radius: 4px; pointer-events: none; z-index: 0;
+}
+
+/* 時刻ツールチップ */
+.bar-tip {
+  position: absolute; bottom: -24px; left: 50%;
+  transform: translateX(-50%);
+  font-size: .7rem; color: var(--accent);
+  white-space: nowrap; pointer-events: none;
+  display: none; z-index: 10;
+  background: var(--accent-lt);
+  border: 1px solid rgba(79,110,247,.25);
+  border-radius: 4px; padding: 2px 7px;
+  font-weight: 600;
+}
+
+/* 時刻軸ラベル */
+.time-labels {
+  display: flex; justify-content: space-between;
+  font-size: .65rem; color: var(--muted);
+  padding: 3px 0; margin-top: 3px;
+  pointer-events: none; user-select: none;
+}
+
+/* アクションバー */
+.action-bar {
+  display: flex; gap: 10px; justify-content: flex-end;
+  flex-wrap: wrap; margin-top: 20px;
+}
+
+/* ===== シェア画面 ===== */
+.share-screen { display: flex; flex-direction: column; align-items: center; padding-top: 32px; }
+.share-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  max-width: 520px; width: 100%; text-align: center;
+}
+.share-icon { font-size: 2.4rem; margin-bottom: 14px; }
+.share-card h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.share-hint { color: var(--muted); font-size: .85rem; margin-bottom: 22px; line-height: 1.6; }
+.share-hint strong { color: var(--accent); }
+
+.url-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.url-input {
+  flex: 1; background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 7px; color: var(--muted); padding: 9px 12px;
+  font-size: .73rem; font-family: 'Courier New', monospace;
+  outline: none; overflow: hidden; text-overflow: ellipsis;
+}
+.url-len { font-size: .72rem; color: var(--muted); margin-bottom: 16px; }
+.url-len span { color: var(--accent); font-weight: 600; }
+.btn-copy {
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: 7px; color: var(--text); padding: 9px 16px;
+  font-size: .84rem; cursor: pointer; white-space: nowrap;
+  font-weight: 500; transition: background .15s;
+}
+.btn-copy:hover { background: var(--accent-lt); border-color: var(--accent); color: var(--accent); }
+.copy-fb { font-size: .78rem; color: var(--green); min-height: 1.2em; margin-bottom: 4px; font-weight: 500; }
+
+/* ===== 結果画面 ===== */
+.result-header { margin-bottom: 22px; }
+.result-title { font-size: 1.2rem; font-weight: 700; }
+.result-subtitle { font-size: .83rem; color: var(--muted); margin-top: 5px; }
+
+
+.result-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+.result-item {
+  display: flex; gap: 0; align-items: stretch;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.result-item-accent { width: 4px; background: var(--accent); flex-shrink: 0; }
+.result-item-body { display: flex; align-items: center; gap: 14px; padding: 12px 16px; flex: 1; }
+.result-date { font-weight: 600; min-width: 110px; font-size: .88rem; }
+.result-time { color: var(--accent); font-size: .88rem; font-weight: 500; }
+
+.no-result {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 24px; text-align: center;
+  color: var(--muted); margin-bottom: 24px;
+}
+
+/* disabled bar */
+.bar-disabled {
+  background: #fef2f2; border: 1.5px solid #fca5a5;
+  border-radius: 7px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; color: #ef4444;
+}
+
+/* 参加不可ボタン列 */
+.unavail-cell {
+  padding: 6px 10px 6px 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.unavail-btn {
+  font-size: .75rem; font-weight: 600; padding: 5px 10px;
+  border-radius: 6px; cursor: pointer; white-space: nowrap;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2); color: var(--muted);
+  transition: all .15s;
+}
+.unavail-btn:hover {
+  border-color: var(--red-bdr); color: var(--red-bdr);
+  background: #fef2f2;
+}
+.unavail-btn.active {
+  background: #fef2f2; border-color: var(--red-bdr);
+  color: var(--red-bdr);
+}
+
+/* ===== トップページ ===== */
+.top-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px 80px;
+}
+.top-inner {
+  width: 100%;
+  max-width: 760px;
+}
+.top-hero {
+  text-align: center;
+  margin-bottom: 52px;
+}
+.top-hero .app-title {
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+}
+.top-hero .lead {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 400px;
+  margin: 0 auto 32px;
+}
+.top-start-btn {
+  font-size: 1rem;
+  padding: 14px 36px;
+  border-radius: 99px;
+  box-shadow: 0 4px 20px rgba(79,110,247,.35);
+}
+.top-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 48px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  text-align: center;
+}
+.feature-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.feature-title { font-size: .9rem; font-weight: 700; margin-bottom: 6px; }
+.feature-desc  { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+
+/* ===== 設定サマリーカード（グリッド画面上部）===== */
+.config-summary {
+  background: var(--accent-lt);
+  border: 1px solid rgba(79,110,247,.22);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  align-items: center;
+}
+.config-summary-title {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  width: 100%;
+  margin-bottom: 2px;
+}
+.config-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .82rem;
+  color: var(--text);
+  font-weight: 500;
+}
+.config-chip svg { flex-shrink: 0; }
+
+/* ===== 参加者ステータス（グリッド画面下部）===== */
+.status-section {
+  margin-top: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.status-title {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 14px;
+}
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  font-size: .85rem;
+}
+.status-row.done {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.status-row.current {
+  background: var(--accent-lt);
+  border-color: rgba(79,110,247,.4);
+}
+.status-row.pending {
+  opacity: .6;
+}
+.status-num {
+  font-size: .75rem;
+  font-weight: 700;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--border2);
+  color: var(--muted);
+}
+.status-row.done    .status-num { background: #16a34a; color: #fff; }
+.status-row.current .status-num { background: var(--accent); color: #fff; }
+.status-name { flex: 1; font-weight: 500; }
+.status-badge {
+  font-size: .7rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+}
+.status-row.done    .status-badge { background: #dcfce7; color: #16a34a; }
+.status-row.current .status-badge { background: var(--accent-lt); color: var(--accent); }
+.status-row.pending .status-badge { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+
+/* ===== 使い方ページ ===== */
+.guide-screen { max-width: 700px; margin: 0 auto; padding: 36px 20px 80px; }
+.guide-back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .85rem; color: var(--muted); background: none; border: none;
+  cursor: pointer; padding: 0; margin-bottom: 28px;
+  transition: color .15s;
+}
+.guide-back-btn:hover { color: var(--accent); }
+.guide-back-btn svg { flex-shrink: 0; }
+
+.guide-hero { text-align: center; margin-bottom: 40px; }
+.guide-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
+.guide-hero p  { font-size: .9rem; color: var(--muted); line-height: 1.8; }
+
+.guide-section { margin-bottom: 36px; }
+.guide-section-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--accent); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-lt);
+}
+
+/* 手順ステップ */
+.guide-steps { display: flex; flex-direction: column; gap: 12px; }
+.guide-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.guide-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: .8rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.guide-step-body { flex: 1; }
+.guide-step-title { font-size: .92rem; font-weight: 700; margin-bottom: 4px; }
+.guide-step-desc  { font-size: .82rem; color: var(--muted); line-height: 1.7; }
+
+/* 用途カード */
+.guide-use-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.guide-use-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  box-shadow: var(--shadow);
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.guide-use-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 1px; }
+.guide-use-title { font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+.guide-use-desc  { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+
+/* ポイントリスト */
+.guide-points { display: flex; flex-direction: column; gap: 8px; }
+.guide-point {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: .85rem; line-height: 1.7; color: var(--text);
+}
+.guide-point-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0; margin-top: 9px;
+}
+
+@media (max-width: 600px) {
+  .guide-use-grid { grid-template-columns: 1fr; }
+  .guide-screen { padding: 20px 14px 60px; }
+}
+
+/* ===== シェアボタン群 ===== */
+.share-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+.share-service-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 14px; border-radius: 9px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--text);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .15s; text-decoration: none;
+  white-space: nowrap;
+}
+.share-service-btn:hover { filter: brightness(.96); transform: translateY(-1px); }
+.share-service-btn:active { transform: scale(.97); }
+.share-service-btn .svc-icon { width: 20px; height: 20px; flex-shrink: 0; }
+.share-service-btn.line   { background: #06C755; border-color: #06C755; color: #fff; }
+.share-service-btn.x      { background: #000;    border-color: #000;    color: #fff; }
+.share-service-btn.mail   { background: #f97316; border-color: #f97316; color: #fff; }
+.share-service-btn.native { background: var(--accent); border-color: var(--accent); color: #fff;
+                             grid-column: 1 / -1; }
+.share-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--muted); font-size: .75rem; margin: 4px 0;
+}
+.share-divider::before, .share-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ===== 広告エリア ===== */
+.ad-slot {
+  width: 100%;
+  margin-top: 32px;
+  text-align: center;
+  overflow: hidden;
+}
+.ad-slot ins { display: block; }
+.ad-label {
+  font-size: .68rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 600px) {
+  .screen:not(.top-screen) { padding: 20px 12px 60px; }
+  /* トップ */
+  .top-hero .app-title { font-size: 2rem; }
+  .top-hero .lead { font-size: .9rem; }
+  .top-features { grid-template-columns: 1fr; gap: 10px; margin-bottom: 32px; }
+  .feature-card { padding: 16px 14px; display: flex; align-items: center; gap: 14px; text-align: left; }
+  .feature-icon { font-size: 1.5rem; margin-bottom: 0; flex-shrink: 0; }
+  /* 設定 */
+  .field-row { flex-direction: column; }
+  .card { padding: 20px 16px; }
+  .app-title { font-size: 1.6rem; }
+  /* グリッド */
+  .config-summary { padding: 12px 14px; gap: 5px 14px; }
+  .config-chip { font-size: .78rem; }
+  .grid-header { margin-bottom: 14px; }
+  .person-label { font-size: 1.05rem; }
+  .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -10px; padding: 0 10px; }
+  .schedule-table { min-width: 360px; }
+  .schedule-table th { padding: 7px 8px; font-size: .7rem; }
+  .date-cell { padding: 6px 8px; min-width: 52px; font-size: .78rem; }
+  .date-main { font-size: .8rem; }
+  .date-dow  { font-size: .68rem; }
+  .bar-cell { padding: 6px 8px 12px; }
+  .bar-wrap  { height: 34px; }
+  .handle    { width: 20px; height: 28px; }
+  .time-labels { font-size: .6rem; }
+  .unavail-cell { padding: 4px 6px 4px 0; }
+  .unavail-btn  { font-size: .7rem; padding: 4px 7px; }
+  .action-bar { justify-content: stretch; }
+  .action-bar .btn { flex: 1; font-size: .85rem; padding: 11px 10px; }
+  .status-section { padding: 14px 14px; }
+  .status-row { padding: 8px 10px; font-size: .82rem; }
+  /* シェア */
+  .share-screen { padding-top: 16px; }
+  .share-card { padding: 24px 16px; }
+  .share-btns { gap: 8px; }
+  .share-service-btn { font-size: .8rem; padding: 10px 10px; }
+  /* 結果 */
+  .result-item-body { flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; }
+  .result-date { min-width: unset; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+// 定数
+// ============================================================
+const DAY_LABELS  = ['日','月','火','水','木','金','土'];
+
+// ============================================================
+// 広告スロット
+// AdSense が有効な場合のみ表示される。
+// data-ad-client と data-ad-slot を自分の値に差し替えること。
+// ============================================================
+const AD_CLIENT = 'ca-pub-YOUR_PUBLISHER_ID'; // ← 要変更
+const AD_SLOT   = 'YOUR_AD_SLOT_ID';          // ← 要変更
+
+function adSlotHtml() {
+  return `<div class="ad-slot">
+    <p class="ad-label">広告</p>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="${AD_CLIENT}"
+         data-ad-slot="${AD_SLOT}"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </div>`;
+}
+
+function pushAd() {
+  // DOM に ins タグが追加された後に呼ぶ
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch(e) { /* AdSense 未設定時は無視 */ }
+}
+const HOUR_MARKS  = ['0:00','3:00','6:00','9:00','12:00','15:00','18:00','21:00','24:00'];
+const MINS_IN_DAY = 1440;
+
+// ============================================================
+// URL圧縮エンコード（ビット圧縮 + Base64URL）
+//
+// レイアウト:
+//   5bit  … total-1  (参加者数 1〜20)
+//   5bit  … remaining-1
+//   1bit  … step (0=1分, 1=5分)
+//   各日:  12bit start + 12bit end  ← 12bit で 0〜4095 (1440分をカバー)
+//          start=end=0 → 不参加(null)
+//   日数は end-start から算出（maxDays=62日まで対応）
+//   先頭に日数を6bit格納
+// ============================================================
+
+class BitWriter {
+  constructor() { this.bytes=[]; this.buf=0; this.bits=0; }
+  write(v,n) {
+    for(let i=n-1;i>=0;i--){
+      this.buf=(this.buf<<1)|((v>>i)&1);
+      if(++this.bits===8){this.bytes.push(this.buf);this.buf=0;this.bits=0;}
+    }
+  }
+  finish() {
+    if(this.bits>0) this.bytes.push(this.buf<<(8-this.bits));
+    return new Uint8Array(this.bytes);
+  }
+}
+class BitReader {
+  constructor(bytes){this.bytes=bytes;this.pos=0;}
+  read(n){
+    let v=0;
+    for(let i=0;i<n;i++){
+      const bi=this.pos>>3, bit=7-(this.pos&7);
+      v=(v<<1)|((this.bytes[bi]>>bit)&1);
+      this.pos++;
+    }
+    return v;
+  }
+}
+function toB64u(bytes){
+  let s=''; bytes.forEach(b=>s+=String.fromCharCode(b));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function fromB64u(str){
+  const b64=str.replace(/-/g,'+').replace(/_/g,'/');
+  return Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+}
+
+// タイムゾーンに依存しない日付フォーマット（YYYY-MM-DD）
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function encodeState(config, selections, remaining) {
+  const dates = dateRange(config.start, config.end);
+  const w = new BitWriter();
+  w.write(config.total - 1, 5);
+  w.write(remaining - 1,    5);
+  w.write(config.step === 1 ? 0 : 1, 1);
+  w.write(dates.length - 1, 6);
+  const sd = new Date(config.start+'T00:00:00');
+  w.write(sd.getFullYear(), 12);
+  w.write(sd.getMonth()+1,   4);
+  w.write(sd.getDate(),      5);
+  const cur = new Date(config.start + 'T00:00:00');
+  for (let i = 0; i < dates.length; i++) {
+    const dKey = formatDate(cur);
+    const sel  = selections[dKey];
+    if (!sel) { w.write(4095,12); w.write(4095,12); }
+    else       { w.write(sel.startMin,12); w.write(sel.endMin,12); }
+    cur.setDate(cur.getDate() + 1);
+  }
+  // タイトル: UTF-8バイト列の長さを6bit(0〜63)、続いてバイト列を各8bit
+  const title = config.title || '';
+  const titleBytes = Array.from(new TextEncoder().encode(title.slice(0, 20)));
+  w.write(titleBytes.length, 6);
+  titleBytes.forEach(b => w.write(b, 8));
+  return toB64u(w.finish());
+}
+
+function decodeState(str) {
+  const bytes = fromB64u(str);
+  const r = new BitReader(bytes);
+  const total     = r.read(5) + 1;
+  const remaining = r.read(5) + 1;
+  const stepBit   = r.read(1);
+  const step      = stepBit === 0 ? 1 : 5;
+  const numDays   = r.read(6) + 1;
+  const year  = r.read(12);
+  const month = r.read(4);
+  const day   = r.read(5);
+  const startStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  // ローカル日付で計算（toISOStringはUTC基準でずれるため使わない）
+  const startDate = new Date(startStr + 'T00:00:00');
+  const endDate   = new Date(startStr + 'T00:00:00');
+  endDate.setDate(endDate.getDate() + numDays - 1);
+  const endStr = formatDate(endDate);
+
+  // エンコード時と同じ dateRange でキーを生成し、ビット列と1対1対応させる
+  // ここで startDate を使い直接ループすることで dateRange との不一致を防ぐ
+  const config = { start: startStr, end: endStr, total, step };
+  const selections = {};
+  const cur = new Date(startStr + 'T00:00:00');
+  for (let i = 0; i < numDays; i++) {
+    const dKey = formatDate(cur);
+    const s = r.read(12);
+    const e = r.read(12);
+    selections[dKey] = (s === 4095 && e === 4095) ? null : { startMin: s, endMin: e };
+    cur.setDate(cur.getDate() + 1);
+  }
+  // タイトル（末尾にオプションで付加、古いURLには存在しない）
+  let title = '';
+  try {
+    const titleLen = r.read(6);
+    if (titleLen > 0) {
+      const titleBytes = [];
+      for (let i = 0; i < titleLen; i++) titleBytes.push(r.read(8));
+      title = new TextDecoder().decode(new Uint8Array(titleBytes));
+    }
+  } catch(e) { /* 古いURLにはタイトルがないため無視 */ }
+  config.title = title;
+  return { config, selections, remaining };
+}
+
+function buildShareUrl(config, selections, remaining) {
+  return location.origin + location.pathname + '#' + encodeState(config, selections, remaining);
+}
+function loadFromUrl() {
+  const hash = location.hash.slice(1);
+  if (!hash) return null;
+  try {
+    if (hash.startsWith('R')) {
+      // 結果URL: 先頭の 'R' を除いてデコード
+      const decoded = decodeState(hash.slice(1));
+      return { ...decoded, isResult: true };
+    }
+    return decodeState(hash);
+  } catch(e) { console.warn(e); return null; }
+}
+
+// ============================================================
+// ユーティリティ
+// ============================================================
+function dateRange(start, end) {
+  const dates=[], cur=new Date(start+'T00:00:00'), last=new Date(end+'T00:00:00');
+  while(cur<=last){ dates.push(formatDate(cur)); cur.setDate(cur.getDate()+1); }
+  return dates;
+}
+function minutesToPct(m){ return (m/MINS_IN_DAY)*100; }
+function pctToMinutes(p){ return Math.round((p/100)*MINS_IN_DAY); }
+function snapMins(m, step){ return Math.round(m/step)*step; }
+function minsToLabel(m){
+  return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+}
+function escAttr(s){ return s.replace(/"/g,'&quot;'); }
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function todayStr(){ return formatDate(new Date()); }
+function addDays(dateStr, n){
+  const d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
+  return formatDate(d);
+}
+
+// ============================================================
+// アプリ起動
+// ============================================================
+const app = document.getElementById('app');
+(function init(){
+  const s = loadFromUrl();
+  if (s) {
+    if (s.isResult) {
+      // 結果URLから直接開いた場合 → 結果画面を表示
+      showResultScreen(s.selections, s.config);
+    } else {
+      showGridScreen(s.config, s.selections, s.remaining);
+    }
+  } else {
+    showTopScreen();
+  }
+})();
+// hashchange は使用しない（意図しない再描画を防ぐため）
+// 画面遷移はすべてJS内の関数呼び出しで管理する
+
+// ============================================================
+// 0. トップページ
+// ============================================================
+function showTopScreen() {
+  app.innerHTML = `
+    <div class="screen top-screen">
+      <div class="top-inner">
+      <div class="top-hero">
+        <h1 class="app-title">日程<span>調整</span></h1>
+        <p class="lead">
+          参加者全員の空き時間を<br>
+          リンクをリレーするだけで集められます。<br>
+          アカウント不要・無料・サーバー保存なし。
+        </p>
+        <button class="btn btn-primary top-start-btn" id="top-start-btn">
+          はじめる
+        </button>
+        <button class="btn btn-secondary" id="top-guide-btn"
+          style="margin-top:12px;border-radius:99px;padding:10px 28px;font-size:.88rem">
+          使い方を見る
+        </button>
+      </div>
+
+      <div class="top-features">
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <div class="feature-title">日付を自由設定</div>
+          <div class="feature-desc">開始日・終了日を<br>自由に決められます</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">リンクをリレー</div>
+          <div class="feature-desc">URLを次の参加者に<br>送るだけで完結</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <div class="feature-title">全員OKを自動抽出</div>
+          <div class="feature-desc">全員が参加可能な<br>時間帯を自動計算</div>
+        </div>
+      </div>
+
+      <div style="text-align:center">
+        <p style="font-size:.78rem;color:var(--muted);line-height:1.7">
+          入力データはURLに圧縮されるため<br>サーバーには一切保存されません
+        </p>
+      </div>
+      </div><!-- /top-inner -->
+    </div>`;
+
+  app.querySelector('#top-start-btn').onclick = showSetupScreen;
+  app.querySelector('#top-guide-btn').onclick  = showGuideScreen;
+  // 広告
+  app.querySelector('.top-inner').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 0b. 使い方ページ
+// ============================================================
+function showGuideScreen() {
+  app.innerHTML = `
+    <div class="screen guide-screen">
+
+      <button class="guide-back-btn" id="guide-back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+
+      <div class="guide-hero">
+        <h1>使い方ガイド</h1>
+        <p>リンクをリレーするだけで<br>グループ全員の空き時間を簡単に集められます</p>
+      </div>
+
+      <!-- 使い方ステップ -->
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          使い方（ステップ）
+        </div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-body">
+              <div class="guide-step-title">主催者が期間・人数・精度を設定する</div>
+              <div class="guide-step-desc">
+                「はじめる」から調整したい日程の開始日・終了日、参加人数、
+                時間の精度（1分 or 5分単位）を選択します。
+              </div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-body">
+              <div class="guide-step-title">主催者（1人目）が参加可能な時間をバーで選択する</div>
+              <div class="guide-step-desc">
+                各日付の横にあるバーの左右の端をドラッグして、青い部分が
+                参加できる時間帯になるよう調整します。終日参加できない日は
+                「参加不可」ボタンを押してください。
+              </div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-body">
+              <div class="guide-step-title">「リンクを生成して次の人へ」を押してURLを共有する</div>
+              <div class="guide-step-desc">
+                生成されたURLをコピーして LINE・メールなどで次の参加者に送ります。
+                URLの中に選択データが圧縮されているため、サーバーへの保存は不要です。
+              </div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-body">
+              <div class="guide-step-title">2人目以降も同じURLを開いて選択・共有を繰り返す</div>
+              <div class="guide-step-desc">
+                URLを開くと前の人が選んだ範囲が表示されます。その中から
+                自分が参加できる時間帯を選んでまた次の人にURLを送ります。
+                これを全員が完了するまで繰り返します。
+              </div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">5</div>
+            <div class="guide-step-body">
+              <div class="guide-step-title">最後の人が「結果を確定する」を押して全員に共有</div>
+              <div class="guide-step-desc">
+                最後の参加者が入力すると、全員が参加できる時間帯が自動的に
+                計算されます。結果ページのURLを保存・共有することで、
+                いつでも結果を確認できます。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- こんな用途に使えます -->
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          こんな用途に使えます
+        </div>
+        <div class="guide-use-grid">
+          <div class="guide-use-card">
+            <div class="guide-use-icon">🎸</div>
+            <div>
+              <div class="guide-use-title">バンド練習の日程調整</div>
+              <div class="guide-use-desc">
+                メンバー全員が揃えるスタジオの予約日を探すのに最適。
+                楽器ごとに都合が違っても一発で調整できます。
+              </div>
+            </div>
+          </div>
+          <div class="guide-use-card">
+            <div class="guide-use-icon">🍺</div>
+            <div>
+              <div class="guide-use-title">飲み会・食事会</div>
+              <div class="guide-use-desc">
+                友人グループや職場の飲み会で「いつなら全員来られる？」を
+                すばやく解決。お店の予約もスムーズです。
+              </div>
+            </div>
+          </div>
+          <div class="guide-use-card">
+            <div class="guide-use-icon">⚽</div>
+            <div>
+              <div class="guide-use-title">サークル・部活の練習</div>
+              <div class="guide-use-desc">
+                スポーツや趣味のサークルで、全員参加できる練習日・
+                集合時間を効率よく決められます。
+              </div>
+            </div>
+          </div>
+          <div class="guide-use-card">
+            <div class="guide-use-icon">💼</div>
+            <div>
+              <div class="guide-use-title">打ち合わせ・会議</div>
+              <div class="guide-use-desc">
+                複数のメンバーが揃うミーティングの日時決めに。
+                アカウント不要なので社外の人とも使いやすいです。
+              </div>
+            </div>
+          </div>
+          <div class="guide-use-card">
+            <div class="guide-use-icon">🎉</div>
+            <div>
+              <div class="guide-use-title">イベント・パーティー</div>
+              <div class="guide-use-desc">
+                誕生日会・同窓会・旅行など、みんなが参加できる
+                日程を見つけたいときに活躍します。
+              </div>
+            </div>
+          </div>
+          <div class="guide-use-card">
+            <div class="guide-use-icon">📚</div>
+            <div>
+              <div class="guide-use-title">勉強会・研修</div>
+              <div class="guide-use-desc">
+                オンライン・オフラインを問わず、参加者全員の
+                都合に合った開催日を簡単に見つけられます。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ポイント -->
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          このアプリの特徴
+        </div>
+        <div class="guide-points">
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div><strong>アカウント不要・完全無料</strong>　登録や課金なしですぐ使えます</div>
+          </div>
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div><strong>サーバー保存なし</strong>　全データはURLの中に圧縮されるためプライバシーが守られます</div>
+          </div>
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div><strong>分単位で細かく指定</strong>　1分・5分単位で参加できる時間帯を正確に伝えられます</div>
+          </div>
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div><strong>スマホ・PCどちらでもOK</strong>　スマホでの操作に最適化されたUIです</div>
+          </div>
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div><strong>LINE・X・メール対応</strong>　各画面からそのままシェアできます</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="guide-start-btn"
+        style="width:100%;margin-top:8px">
+        さっそくはじめる
+      </button>
+
+    </div>`;
+
+  app.querySelector('#guide-back-btn').onclick  = showTopScreen;
+  app.querySelector('#guide-start-btn').onclick = showSetupScreen;
+  // 広告
+  app.querySelector('.guide-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 1. 設定画面
+// ============================================================
+function showSetupScreen() {
+  let count = 2;
+  const today = todayStr();
+  const defEnd = addDays(today, 13); // デフォルト2週間
+
+  app.innerHTML = `
+    <div class="screen setup-screen">
+      <button class="guide-back-btn" id="setup-back-btn" style="margin-bottom:20px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <h1 class="app-title">日程<span>調整</span></h1>
+      <p class="subtitle">参加者全員の空き時間を集めます</p>
+
+      <div class="card">
+        <div class="setup-form">
+
+          <div class="field">
+            <label>調整タイトル（任意）</label>
+            <input type="text" id="f-title" placeholder="例：バンド練習、飲み会など"
+              maxlength="20"
+              style="background:var(--surface2);border:1.5px solid var(--border);
+                     border-radius:8px;color:var(--text);padding:9px 13px;
+                     font-size:.93rem;outline:none;width:100%;
+                     transition:border-color .15s,box-shadow .15s" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>開始日</label>
+              <input type="date" id="f-start" value="${today}" min="${today}" />
+            </div>
+            <div class="field">
+              <label>終了日</label>
+              <input type="date" id="f-end" value="${defEnd}" min="${today}" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>参加人数（自分含む）</label>
+            <div class="number-row">
+              <button class="num-btn" id="cnt-dn">−</button>
+              <span id="count-val">${count}</span>
+              <button class="num-btn" id="cnt-up">＋</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>時間の精度</label>
+            <div class="radio-group">
+              <label class="radio-opt">
+                <input type="radio" name="step" value="1" checked />
+                <span class="dot-icon"></span>
+                1分単位
+              </label>
+              <label class="radio-opt">
+                <input type="radio" name="step" value="5" />
+                <span class="dot-icon"></span>
+                5分単位
+              </label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="start-btn" style="margin-top:4px">
+            参加可能な時間帯を選ぶ →
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  app.querySelector('#setup-back-btn').onclick = showTopScreen;
+  const cv = app.querySelector('#count-val');
+  app.querySelector('#cnt-dn').onclick = () => { if(count>2){count--;cv.textContent=count;} };
+  app.querySelector('#cnt-up').onclick = () => { if(count<30){count++;cv.textContent=count;} };
+
+  // 開始日が変わったら終了日の min を更新
+  app.querySelector('#f-start').onchange = function(){
+    const endEl = app.querySelector('#f-end');
+    endEl.min = this.value;
+    if(endEl.value < this.value) endEl.value = this.value;
+  };
+
+  app.querySelector('#start-btn').onclick = () => {
+    const start = app.querySelector('#f-start').value;
+    const end   = app.querySelector('#f-end').value;
+    if(!start || !end || start > end){
+      alert('開始日と終了日を正しく設定してください'); return;
+    }
+    const days = dateRange(start, end).length;
+    if(days > 62){ alert('期間は最大62日間です'); return; }
+    const step = parseInt(app.querySelector('input[name="step"]:checked').value, 10);
+    const title = app.querySelector('#f-title').value.trim();
+    const config = { start, end, total: count, step, title };
+    showGridScreen(config, null, count);
+  };
+  // 広告
+  app.querySelector('.setup-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 2. グリッド選択画面
+// savedSels: 戻るボタンで保持した入力内容（nullなら初期値）
+// ============================================================
+function showGridScreen(config, prevSelections, remaining, savedSels) {
+  const dates = dateRange(config.start, config.end);
+  const personIndex = config.total - remaining;
+  const isFirst = prevSelections === null;
+  const step = config.step || 1;
+
+  // 初期選択を決定する
+  // savedSels が渡されていればそれを最優先で使う（戻るボタン復元）
+  const currentSels = {};
+  dates.forEach(d => {
+    if (savedSels !== null && savedSels !== undefined && Object.prototype.hasOwnProperty.call(savedSels, d)) {
+      // savedSels[d] は { startMin, endMin } または null（参加不可）
+      const sv = savedSels[d];
+      currentSels[d] = sv ? { startMin: sv.startMin, endMin: sv.endMin } : null;
+    } else if (isFirst) {
+      currentSels[d] = { startMin: 540, endMin: 1080 };
+    } else {
+      const prev = prevSelections[d];
+      // prev が存在しない（前の人が不参加 or URLデータなし）場合は null
+      currentSels[d] = prev ? { startMin: prev.startMin, endMin: prev.endMin } : null;
+    }
+  });
+
+  const dotsHtml = Array.from({length:config.total},(_,i)=>
+    `<span class="dot ${i<personIndex?'done':i===personIndex?'active':''}"></span>`
+  ).join('');
+
+  const isOrganizer = personIndex === 0;
+
+  const rowsHtml = dates.map(d => {
+    const date = new Date(d+'T00:00:00');
+    const dow  = DAY_LABELS[date.getDay()];
+    const isWE = date.getDay()===0||date.getDay()===6;
+    // prevSelections[d] が undefined（URLデコード漏れ）の場合はフォールバック
+    const prev = isFirst ? null : (prevSelections[d] ?? null);
+    // disabled: 1人目以外で prev が null（明示的に不参加）のとき
+    // ただし undefined によるフォールバックは disabled にしない
+    const prevExists = isFirst ? true : Object.prototype.hasOwnProperty.call(prevSelections, d);
+    const disabled = !isFirst && prevExists && !prev;
+    // 参加不可状態: currentSels[d] === null（かつ disabled でない）
+    const isUnavail = !disabled && currentSels[d] === null;
+    return `
+      <tr class="${isWE?'weekend':''}" data-date="${d}">
+        <td class="date-cell">
+          <div class="date-main">${d.slice(5).replace('-','/')}</div>
+          <div class="date-dow">${dow}</div>
+        </td>
+        <td class="bar-cell">
+          ${disabled
+            ? `<div class="bar-disabled">前の参加者が不参加</div>`
+            : buildBarHtml(d, currentSels[d], prev, isUnavail)
+          }
+          ${disabled ? '' : `<div class="time-labels">${HOUR_MARKS.map(h=>`<span>${h}</span>`).join('')}</div>`}
+        </td>
+        ${disabled ? '' : `
+        <td class="unavail-cell">
+          <button class="unavail-btn ${isUnavail ? 'active' : ''}" data-date="${d}">
+            参加不可
+          </button>
+        </td>`}
+      </tr>`;
+  }).join('');
+
+  // --- 設定サマリー ---
+  const startFmt = config.start.slice(5).replace('-','/');
+  const endFmt   = config.end.slice(5).replace('-','/');
+
+  // --- ステータスリスト ---
+  const statusRows = Array.from({length: config.total}, (_,i) => {
+    let cls, badge, name;
+    if (i < personIndex) {
+      cls = 'done'; badge = '入力済み'; name = `${i+1}人目${i===0?' (主催者)':''}`;
+    } else if (i === personIndex) {
+      cls = 'current'; badge = '入力中'; name = `${i+1}人目${i===0?' (主催者)':''}`;
+    } else {
+      cls = 'pending'; badge = '未入力'; name = `${i+1}人目`;
+    }
+    return `<div class="status-row ${cls}">
+      <span class="status-num">${i+1}</span>
+      <span class="status-name">${name}</span>
+      <span class="status-badge">${badge}</span>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="screen grid-screen">
+
+      <button class="guide-back-btn" id="top-back-btn" style="margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <!-- 設定サマリー -->
+      <div class="config-summary">
+        <div class="config-summary-title">${config.title ? escHtml(config.title) : '調整内容'}</div>
+        <span class="config-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${startFmt} 〜 ${endFmt}（${dates.length}日間）
+        </span>
+        <span class="config-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          ${config.total}人
+        </span>
+        <span class="config-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${step}分単位
+        </span>
+      </div>
+
+      <div class="grid-header">
+        <div>
+          <div class="person-label">
+            ${personIndex+1}人目の入力
+            ${isOrganizer ? '<span class="organizer-badge">主催者</span>' : ''}
+          </div>
+          <div class="header-hint">
+            バーの端をドラッグして青い部分（参加可能）を調整
+          </div>
+        </div>
+        <div class="dots">${dotsHtml}</div>
+      </div>
+
+      <div class="table-scroll-wrap">
+      <table class="schedule-table">
+        <thead><tr>
+          <th style="width:78px">日付</th>
+          <th>参加可能時間帯 &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0">（青 = 参加可／赤 = 参加不可）</span></th>
+          <th style="width:84px"></th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-secondary" id="reset-btn">リセット</button>
+        <button class="btn btn-primary" id="next-btn">
+          ${remaining>1 ? 'リンクを生成して次の人へ →' : '結果を見る →'}
+        </button>
+      </div>
+
+      <!-- 参加者ステータス -->
+      <div class="status-section">
+        <div class="status-title">参加者の入力状況</div>
+        <div class="status-list">${statusRows}</div>
+      </div>
+
+    </div>`;
+
+  // バー初期化
+  dates.forEach(d => {
+    // bar-wrap-unavail（参加不可表示）は initBar 対象外
+    const wrap = app.querySelector(`tr[data-date="${d}"] .bar-wrap[data-date]:not(.bar-wrap-unavail)`);
+    if(wrap) {
+      const prevSel = isFirst ? null : (prevSelections[d] ?? null);
+      initBar(wrap, currentSels, d, prevSel, step);
+    }
+  });
+
+  // 参加不可ボタン
+  app.querySelectorAll('.unavail-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.date;
+      const prev = isFirst ? null : (prevSelections[d] ?? null);
+      const clampMin = prev ? prev.startMin : 0;
+      const clampMax = prev ? prev.endMin   : MINS_IN_DAY;
+
+      if (btn.classList.contains('active')) {
+        // 参加不可 → 参加可能に戻す（デフォルト範囲）
+        const defS = prev ? clampMin : 540;
+        const defE = prev ? clampMax : 1080;
+        currentSels[d] = { startMin: defS, endMin: defE };
+        btn.classList.remove('active');
+        // バーを再描画
+        const cell = app.querySelector(`tr[data-date="${d}"] .bar-cell`);
+        cell.innerHTML =
+          buildBarHtml(d, currentSels[d], prev, false) +
+          `<div class="time-labels">${HOUR_MARKS.map(h=>`<span>${h}</span>`).join('')}</div>`;
+        const newWrap = cell.querySelector('.bar-wrap[data-date]:not(.bar-wrap-unavail)');
+        if(newWrap) initBar(newWrap, currentSels, d, prev, step);
+      } else {
+        // 参加可能 → 参加不可
+        currentSels[d] = null;
+        btn.classList.add('active');
+        const cell = app.querySelector(`tr[data-date="${d}"] .bar-cell`);
+        cell.innerHTML =
+          buildBarHtml(d, null, prev, true) +
+          `<div class="time-labels">${HOUR_MARKS.map(h=>`<span>${h}</span>`).join('')}</div>`;
+      }
+    });
+  });
+
+  // 広告
+  app.querySelector('.grid-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+
+  app.querySelector('#top-back-btn').onclick = showTopScreen;
+
+  // リセット（保存なし）
+  app.querySelector('#reset-btn').onclick = () =>
+    showGridScreen(config, prevSelections, remaining, null);
+
+  // 次へボタン
+  app.querySelector('#next-btn').onclick = () => {
+    // 現在の入力をディープコピーして保存（戻るボタン用）
+    const snapshot = {};
+    dates.forEach(d => {
+      snapshot[d] = currentSels[d]
+        ? { startMin: currentSels[d].startMin, endMin: currentSels[d].endMin }
+        : null;
+    });
+
+    // AND計算は現時点の currentSels を使う
+    const andSels = computeAnd(currentSels, prevSelections, isFirst);
+    const nextRemaining = remaining - 1;
+
+    if (nextRemaining > 0) {
+      const url = buildShareUrl(config, andSels, nextRemaining);
+      showShareScreen(url, nextRemaining, () => {
+        showGridScreen(config, prevSelections, remaining, snapshot);
+      });
+    } else {
+      // 最終人: プレビュー画面へ。戻るときは snapshot を渡して復元
+      showPreviewScreen(andSels, config, () => {
+        showGridScreen(config, prevSelections, remaining, snapshot);
+      });
+    }
+  };
+}
+
+// ============================================================
+// バーHTML
+// ============================================================
+function buildBarHtml(date, sel, prev, isUnavail) {
+  // 参加不可の場合は全体を赤で表示（ハンドルなし）
+  if (isUnavail) {
+    const prevHtml = prev
+      ? `<div class="bar-prev" style="left:${minutesToPct(prev.startMin).toFixed(3)}%;width:${(minutesToPct(prev.endMin)-minutesToPct(prev.startMin)).toFixed(3)}%"></div>`
+      : '';
+    return `
+      <div class="bar-wrap bar-wrap-unavail" data-date="${date}" data-start="0" data-end="0">
+        ${prevHtml}
+        <div style="position:absolute;inset:0;background:var(--red);border-radius:5px;pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+             font-size:.75rem;color:var(--red-bdr);font-weight:600;pointer-events:none;">終日参加不可</div>
+      </div>`;
+  }
+
+  const s = sel ? minutesToPct(sel.startMin) : 0;
+  const e = sel ? minutesToPct(sel.endMin)   : 100;
+  const prevHtml = prev
+    ? `<div class="bar-prev" style="left:${minutesToPct(prev.startMin).toFixed(3)}%;width:${(minutesToPct(prev.endMin)-minutesToPct(prev.startMin)).toFixed(3)}%"></div>`
+    : '';
+  return `
+    <div class="bar-wrap" data-date="${date}"
+         data-start="${sel?sel.startMin:0}" data-end="${sel?sel.endMin:MINS_IN_DAY}">
+      ${prevHtml}
+      <div data-role="red-left"  class="bar-red-left"  style="width:${s.toFixed(3)}%"></div>
+      <div data-role="blue"      class="bar-blue"       style="left:${s.toFixed(3)}%;width:${(e-s).toFixed(3)}%"></div>
+      <div data-role="red-right" class="bar-red-right"  style="width:${(100-e).toFixed(3)}%"></div>
+      <div data-role="handle-l"  class="handle"         style="left:${s.toFixed(3)}%"></div>
+      <div data-role="handle-r"  class="handle"         style="left:${e.toFixed(3)}%"></div>
+      <div data-role="tip"       class="bar-tip"></div>
+    </div>`;
+}
+
+// ============================================================
+// ドラッグロジック（バー本体移動は削除、ハンドルのみ）
+// ============================================================
+function initBar(wrap, currentSels, date, prevSel, step) {
+  const MIN_GAP  = Math.max(step, 5);
+  const clampMin = prevSel ? prevSel.startMin : 0;
+  const clampMax = prevSel ? prevSel.endMin   : MINS_IN_DAY;
+
+  const el = role => wrap.querySelector(`[data-role="${role}"]`);
+
+  function readMins(){ return { s:+wrap.dataset.start, e:+wrap.dataset.end }; }
+
+  function applyMins(s, e) {
+    s = snapMins(s, step);
+    e = snapMins(e, step);
+    s = Math.max(clampMin, Math.min(s, clampMax - MIN_GAP));
+    e = Math.max(s + MIN_GAP, Math.min(e, clampMax));
+    s = Math.min(s, e - MIN_GAP);
+    wrap.dataset.start = s;
+    wrap.dataset.end   = e;
+    currentSels[date]  = { startMin:s, endMin:e };
+    const sp = minutesToPct(s), ep = minutesToPct(e);
+    el('red-left') .style.width = sp.toFixed(3)+'%';
+    el('blue')     .style.left  = sp.toFixed(3)+'%';
+    el('blue')     .style.width = (ep-sp).toFixed(3)+'%';
+    el('red-right').style.width = (100-ep).toFixed(3)+'%';
+    el('handle-l') .style.left  = sp.toFixed(3)+'%';
+    el('handle-r') .style.left  = ep.toFixed(3)+'%';
+    el('tip').textContent = `${minsToLabel(s)} 〜 ${minsToLabel(e)}`;
+  }
+
+  function pctFromEv(ev) {
+    const rect = wrap.getBoundingClientRect();
+    const x = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    return Math.max(0, Math.min(100, ((x-rect.left)/rect.width)*100));
+  }
+
+  // ハンドルがなければ（bar-wrap-unavail等）即リターン
+  if (!el('handle-l') || !el('handle-r')) return;
+
+  // ハンドルドラッグのみ（バー本体ドラッグは削除）
+  ['handle-l','handle-r'].forEach(role => {
+    const handle = el(role);
+    const isLeft = role === 'handle-l';
+    let dragging = false;
+
+    const onStart = ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      dragging = true;
+      el('tip').style.display = 'block';
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, {passive:false});
+      window.addEventListener('mouseup',   onEnd);
+      window.addEventListener('touchend',  onEnd);
+    };
+    const onMove = ev => {
+      if(!dragging) return;
+      ev.preventDefault();
+      const mins = pctToMinutes(pctFromEv(ev));
+      const {s,e} = readMins();
+      isLeft ? applyMins(mins,e) : applyMins(s,mins);
+    };
+    const onEnd = () => {
+      dragging = false;
+      el('tip').style.display = 'none';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup',   onEnd);
+      window.removeEventListener('touchend',  onEnd);
+    };
+    handle.addEventListener('mousedown',  onStart);
+    handle.addEventListener('touchstart', onStart, {passive:false});
+  });
+}
+
+// ============================================================
+// AND計算
+// prev[d] が undefined（URLデコード漏れ等）のとき制約なしとして扱う
+// ============================================================
+function computeAnd(current, prev, isFirst) {
+  if (isFirst) return current;
+  const result = {};
+  Object.keys(current).forEach(d => {
+    const c = current[d];
+    if (!c) { result[d] = null; return; }   // current が参加不可
+    if (!prev) { result[d] = c; return; }   // prev自体がない → 制約なし
+    const hasKey = Object.prototype.hasOwnProperty.call(prev, d);
+    if (!hasKey) { result[d] = c; return; } // prevにdのキーがない → 制約なし
+    const p = prev[d];
+    if (!p) { result[d] = null; return; }   // prev が参加不可
+    const s = Math.max(c.startMin, p.startMin);
+    const e = Math.min(c.endMin,   p.endMin);
+    result[d] = s < e ? { startMin: s, endMin: e } : null;
+  });
+  return result;
+}
+
+// ============================================================
+// 3. シェア画面（SNSシェア対応）
+// ============================================================
+function showShareScreen(url, remaining, onBack) {
+  const txt = encodeURIComponent('日程調整のURLです。参加可能な時間帯を入力してください。');
+  const encodedUrl = encodeURIComponent(url);
+
+  // Web Share API が使えるか（スマホで「その他」ボタン表示用）
+  const hasNativeShare = !!(navigator.share);
+
+  app.innerHTML = `
+    <div class="screen share-screen">
+      <button class="guide-back-btn" id="top-back-btn" style="margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <div class="share-card">
+        <div class="share-icon">🔗</div>
+        <h2>リンクを共有してください</h2>
+        <p class="share-hint">
+          このURLをコピーまたは下のボタンで送ってください。<br>
+          あと <strong>${remaining}人</strong> が入力する必要があります。
+        </p>
+
+        <div class="url-row">
+          <input class="url-input" id="share-url" value="${escAttr(url)}" readonly />
+          <button class="btn-copy" id="copy-btn">コピー</button>
+        </div>
+        <p class="copy-fb" id="copy-fb"></p>
+
+        <div class="share-divider">アプリでシェア</div>
+
+        <div class="share-btns">
+          <!-- LINE -->
+          <a class="share-service-btn line"
+             href="https://line.me/R/msg/text/?${txt}%0A${encodedUrl}"
+             target="_blank" rel="noopener">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.05 2 11.07c0 3.46 2.18 6.49 5.47 8.19l-.7 2.56 2.93-1.54c.73.2 1.5.31 2.3.31 5.52 0 10-4.05 10-9.07C22 6.05 17.52 2 12 2zm5.29 11.85c-.22.6-1.28 1.14-1.77 1.21-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.49-.55-2.62-1.13-4.33-3.77-4.46-3.95-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.69-.33.17 0 .35 0 .5.01.16.01.37-.06.58.44.22.52.75 1.82.81 1.96.07.13.11.28.02.45-.09.17-.13.28-.26.43-.13.15-.27.33-.38.45-.13.13-.27.27-.11.53.15.26.68 1.12 1.46 1.81.99.88 1.84 1.16 2.1 1.29.26.13.41.11.56-.07.15-.18.65-.76.82-1.02.17-.26.34-.22.58-.13.24.09 1.52.72 1.78.85.26.13.43.19.5.3.06.1.06.6-.16 1.17z"/>
+            </svg>
+            LINE
+          </a>
+
+          <!-- X(Twitter) -->
+          <a class="share-service-btn x"
+             href="https://twitter.com/intent/tweet?text=${txt}&url=${encodedUrl}"
+             target="_blank" rel="noopener">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            X
+          </a>
+
+          <!-- メール -->
+          <a class="share-service-btn mail"
+             href="mailto:?subject=${encodeURIComponent('日程調整のお願い')}&body=${txt}%0A${encodedUrl}">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            メール
+          </a>
+
+
+          ${hasNativeShare ? `
+          <!-- ネイティブシェア（スマホのその他アプリ） -->
+          <button class="share-service-btn native" id="native-share-btn">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            その他のアプリでシェア
+          </button>` : ''}
+        </div>
+
+        <button class="btn btn-secondary" id="back-btn" style="width:100%;margin-top:8px">
+          ← 選択画面に戻る
+        </button>
+      </div>
+    </div>`;
+
+  // コピー
+  app.querySelector('#copy-btn').onclick = () => {
+    navigator.clipboard.writeText(url)
+      .then(() => {
+        const fb = app.querySelector('#copy-fb');
+        fb.textContent = '✓ コピーしました！';
+        setTimeout(()=>{ fb.textContent=''; }, 2500);
+      })
+      .catch(() => { app.querySelector('#share-url').select(); });
+  };
+
+  // ネイティブシェア（Web Share API）
+  if (hasNativeShare) {
+    app.querySelector('#native-share-btn').onclick = () => {
+      navigator.share({ title: '日程調整', text: '参加可能な時間帯を入力してください。', url })
+        .catch(()=>{});
+    };
+  }
+
+  app.querySelector('#top-back-btn').onclick = showTopScreen;
+  app.querySelector('#back-btn').onclick = onBack;
+  // 広告
+  app.querySelector('.share-screen').insertAdjacentHTML('beforeend',
+    '<div style="width:100%;max-width:520px;margin-top:16px">' + adSlotHtml() + '</div>');
+  pushAd();
+}
+
+// ============================================================
+// 4a. プレビュー画面（最終人が確定前に確認）
+// ============================================================
+function showPreviewScreen(andSels, config, onBack) {
+  const dates  = dateRange(config.start, config.end);
+  const okDays = dates.filter(d => andSels[d]);
+
+  const previewItems = okDays.length
+    ? okDays.map(d => {
+        const date = new Date(d+'T00:00:00');
+        const dow  = DAY_LABELS[date.getDay()];
+        const {startMin,endMin} = andSels[d];
+        return `<li class="result-item">
+          <div class="result-item-accent"></div>
+          <div class="result-item-body">
+            <span class="result-date">${d.slice(5).replace('-','/')}（${dow}）</span>
+            <span class="result-time">${minsToLabel(startMin)} 〜 ${minsToLabel(endMin)}</span>
+          </div>
+        </li>`;
+      }).join('')
+    : '';
+
+  app.innerHTML = `
+    <div class="screen result-screen">
+      <button class="guide-back-btn" id="top-back-btn" style="margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <div class="result-header">
+        <div class="result-title">
+          ${okDays.length ? '🔍 結果のプレビュー' : '😔 共通の空き時間が見つかりませんでした'}
+        </div>
+        <div class="result-subtitle">
+          ${okDays.length
+            ? `${config.total}人全員が参加できる時間帯です。内容を確認してください。`
+            : '選択画面に戻って入力内容を見直してください。'}
+        </div>
+      </div>
+      ${okDays.length
+        ? `<ul class="result-list">${previewItems}</ul>`
+        : `<div class="no-result">参加者全員が空いている時間帯がありませんでした。</div>`
+      }
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn-secondary" id="back-btn">← 選択画面に戻る</button>
+        <button class="btn btn-primary" id="confirm-btn">結果を確定する ✓</button>
+      </div>
+    </div>`;
+
+  app.querySelector('#top-back-btn').onclick = showTopScreen;
+  app.querySelector('#back-btn').onclick = onBack;
+  app.querySelector('#confirm-btn').onclick = () => {
+    showResultScreen(andSels, config);
+  };
+  // 広告
+  app.querySelector('.result-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 4b. 結果画面（確定済み・URL永久保存＋シェア対応）
+// ============================================================
+function showResultScreen(andSels, config) {
+  const dates  = dateRange(config.start, config.end);
+  const okDays = dates.filter(d => andSels[d]);
+
+  // 結果専用URL: remaining=1 で encodeState するとデコード時に「全員入力済み→結果表示」
+  // remaining=0 は 5bit で表現できないため、special flag として remaining=1 を使い
+  // decodeState 後に remaining===1 かつ URLから来た場合は結果画面へ飛ばす。
+  // よりシンプルに: andSels をそのまま remaining=1 でエンコードし、
+  // 開いた人は「1人目の入力画面」ではなく結果画面が出るよう、
+  // 「remaining===config.total（=全員がandSels済みの状態）」で判定する。
+  // 最も確実な方法: andSels を JSON+base64 で別パラメータに持つ。
+  // ここでは既存の encodeState を流用し、remaining=1/total=1 として
+  // 「1人参加・全員入力済み」な状態のURLを生成する。
+
+  // 結果URLの生成:
+  // config を total=1、selections=andSels、remaining=1 でエンコード
+  // → 開いたとき remaining=1=total なので「最終人の入力画面」として表示されるが
+  //   それは不便なので、isResult フラグを追加する。
+  // 最もシンプルな実装: remaining を 0 代わりに特殊値 63（6bit max+1 ≡ -1的な意味）に
+  // するのではなく、total と remaining が等しく remaining===1 のとき結果URLとみなす方針も複雑。
+  //
+  // 【採用する方針】
+  // encodeState の remaining に 1 を渡し、config.total も 1 にする。
+  // → decodeState で total=1, remaining=1 → personIndex=0, isFirst=true
+  // → showGridScreen が表示されてしまう。
+  //
+  // 最終的にシンプルな方針: URL に ?result=1 を付加し、
+  // そのフラグがある場合は loadFromUrl が { ..., isResult: true } を返し
+  // showResultScreen を直接呼ぶ。
+  // ただし既存の # ベースのエンコードを壊さないよう、
+  // result フラグは hash の先頭に 'R' を付けることで識別する。
+
+  // 結果URL: hash の先頭に 'R' を付けて結果画面であることを示す
+  const resultHash = 'R' + encodeState(
+    { ...config, total: config.total },
+    andSels,
+    1  // remaining=1 のダミー（結果URLでは使わない）
+  );
+  const resultUrl = location.origin + location.pathname + '#' + resultHash;
+
+  // シェア用テキスト（URLを含む）
+  const shareLines = okDays.length
+    ? [config.title ? `【${config.title} 日程調整 結果】` : '【日程調整 結果】'].concat(
+        okDays.map(d => {
+          const date = new Date(d+'T00:00:00');
+          const dow  = DAY_LABELS[date.getDay()];
+          const {startMin, endMin} = andSels[d];
+          return d.slice(5).replace('-','/') + '（' + dow + '） ' + minsToLabel(startMin) + '〜' + minsToLabel(endMin);
+        }),
+        [resultUrl]
+      )
+    : ['【日程調整 結果】', '共通の空き時間が見つかりませんでした。'];
+  const shareText = shareLines.join('\n');
+  const encodedShareText = encodeURIComponent(shareText);
+  const hasNativeShare = !!(navigator.share);
+
+  const items = okDays.map(d => {
+    const date = new Date(d+'T00:00:00');
+    const dow  = DAY_LABELS[date.getDay()];
+    const {startMin,endMin} = andSels[d];
+    return `<li class="result-item">
+      <div class="result-item-accent"></div>
+      <div class="result-item-body">
+        <span class="result-date">${d.slice(5).replace('-','/')}（${dow}）</span>
+        <span class="result-time">${minsToLabel(startMin)} 〜 ${minsToLabel(endMin)}</span>
+      </div>
+    </li>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="screen result-screen">
+      <div class="result-header">
+        ${config.title ? `<div style="font-size:.78rem;color:var(--accent);font-weight:700;
+          text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+          ${escHtml(config.title)}</div>` : ''}
+        <div class="result-title">
+          ${okDays.length ? '✅ 全員参加可能な日程' : '😔 共通の空き時間が見つかりませんでした'}
+        </div>
+        ${okDays.length
+          ? `<div class="result-subtitle">${config.total}人全員が参加できる時間帯です</div>`
+          : `<div class="result-subtitle">条件を変えて再調整してください</div>`
+        }
+      </div>
+      ${okDays.length
+        ? `<ul class="result-list">${items}</ul>`
+        : `<div class="no-result">参加者全員が空いている時間帯がありませんでした。</div>`
+      }
+
+      ${okDays.length ? `
+      <!-- 結果URLコピー欄 -->
+      <div class="status-section" style="margin-bottom:20px">
+        <div class="status-title">結果ページのURLを保存・共有する</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px;line-height:1.6">
+          このURLをブックマークまたは共有すると、いつでも結果を確認できます
+        </p>
+        <div class="url-row" style="margin-bottom:10px">
+          <input class="url-input" id="result-url-input"
+            value="${escAttr(resultUrl)}" readonly />
+          <button class="btn-copy" id="res-url-copy-btn">コピー</button>
+        </div>
+        <p class="copy-fb" id="res-copy-fb"></p>
+
+        <div class="share-divider">アプリでシェア</div>
+        <div class="share-btns">
+          <a class="share-service-btn line"
+             href="https://line.me/R/msg/text/?${encodedShareText}"
+             target="_blank" rel="noopener">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.05 2 11.07c0 3.46 2.18 6.49 5.47 8.19l-.7 2.56 2.93-1.54c.73.2 1.5.31 2.3.31 5.52 0 10-4.05 10-9.07C22 6.05 17.52 2 12 2zm5.29 11.85c-.22.6-1.28 1.14-1.77 1.21-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.49-.55-2.62-1.13-4.33-3.77-4.46-3.95-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.69-.33.17 0 .35 0 .5.01.16.01.37-.06.58.44.22.52.75 1.82.81 1.96.07.13.11.28.02.45-.09.17-.13.28-.26.43-.13.15-.27.33-.38.45-.13.13-.27.27-.11.53.15.26.68 1.12 1.46 1.81.99.88 1.84 1.16 2.1 1.29.26.13.41.11.56-.07.15-.18.65-.76.82-1.02.17-.26.34-.22.58-.13.24.09 1.52.72 1.78.85.26.13.43.19.5.3.06.1.06.6-.16 1.17z"/></svg>
+            LINE
+          </a>
+          <a class="share-service-btn x"
+             href="https://twitter.com/intent/tweet?text=${encodedShareText}"
+             target="_blank" rel="noopener">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X
+          </a>
+          <a class="share-service-btn mail"
+             href="mailto:?subject=${encodeURIComponent('日程調整の結果')}&body=${encodedShareText}">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            メール
+          </a>
+
+          ${hasNativeShare ? `
+          <button class="share-service-btn native" id="res-native-btn">
+            <svg class="svc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            その他のアプリ
+          </button>` : ''}
+        </div>
+      </div>` : ''}
+
+      <button class="btn btn-secondary" id="restart-btn" style="margin-top:4px">トップに戻る</button>
+    </div>`;
+
+  // URLコピーボタン
+  if (okDays.length) {
+    app.querySelector('#res-url-copy-btn').onclick = () => {
+      navigator.clipboard.writeText(resultUrl)
+        .then(() => {
+          const fb = app.querySelector('#res-copy-fb');
+          fb.textContent = '✓ URLをコピーしました！';
+          setTimeout(() => { fb.textContent = ''; }, 2500);
+        })
+        .catch(() => { app.querySelector('#result-url-input').select(); });
+    };
+    if (hasNativeShare) {
+      app.querySelector('#res-native-btn').onclick = () => {
+        navigator.share({
+          title: '日程調整の結果',
+          text: shareText,
+          url: resultUrl
+        }).catch(() => {});
+      };
+    }
+  }
+
+  app.querySelector('#restart-btn').onclick = () => {
+    history.replaceState(null, '', location.pathname);
+    showTopScreen();
+  };
+  // 広告
+  app.querySelector('.result-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+</script>
+</body>
+</html>
