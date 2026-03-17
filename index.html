@@ -1,9 +1,64 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>日程調整</title>
+
+<!-- ===== 基本SEO ===== -->
+<title>簡単日程調整ツール - 全員参加可能な時間帯を自動計算 | 無料・登録不要</title>
+<meta name="description" content="参加者全員の空き時間をリンクをリレーするだけで集められる無料の日程調整ツール。アカウント不要・サーバー保存なし。バンド練習・飲み会・会議など全員参加が必要なシーンに最適です。" />
+<meta name="keywords"    content="日程調整,スケジュール調整,無料,登録不要,全員参加,バンド練習,飲み会,会議,グループ,空き時間" />
+<meta name="author"      content="簡単日程調整ツール" />
+<meta name="robots"      content="index, follow" />
+<link rel="canonical"    href="https://simplescheduler-app.netlify.app/" />
+
+<!-- ===== OGP（SNSシェア時のサムネイル・タイトル） ===== -->
+<meta property="og:type"        content="website" />
+<meta property="og:url"         content="https://simplescheduler-app.netlify.app/" />
+<meta property="og:title"       content="簡単日程調整ツール - 全員参加可能な時間帯を自動計算 | 無料・登録不要" />
+<meta property="og:description" content="参加者全員の空き時間をリンクをリレーするだけで集められる無料の日程調整ツール。アカウント不要・サーバー保存なし。バンド練習・飲み会・会議など全員参加が必要なシーンに最適です。" />
+<meta property="og:site_name"   content="簡単日程調整ツール" />
+<meta property="og:locale"      content="ja_JP" />
+<meta property="og:image"       content="https://simplescheduler-app.netlify.app/ogp.png" />
+<meta property="og:image:width"  content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- ===== Twitter Card ===== -->
+<meta name="twitter:card"        content="summary_large_image" />
+<meta name="twitter:title"       content="簡単日程調整ツール - 全員参加可能な時間帯を自動計算 | 無料・登録不要" />
+<meta name="twitter:description" content="参加者全員の空き時間をリンクをリレーするだけで集められる無料の日程調整ツール。アカウント不要・サーバー保存なし。バンド練習・飲み会・会議など全員参加が必要なシーンに最適です。" />
+<meta name="twitter:image"       content="https://simplescheduler-app.netlify.app/ogp.png" />
+
+<!-- ===== ファビコン（SVGインライン） ===== -->
+<link rel="icon"             type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzRmNmVmNyIvPgogIDxyZWN0IHg9IjUiIHk9IjkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxOCIgcng9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjk1Ii8+CiAgPHJlY3QgeD0iNSIgeT0iOSIgd2lkdGg9IjIyIiBoZWlnaHQ9IjciIHJ4PSIzIiBmaWxsPSIjNGY2ZWY3Ii8+CiAgPHJlY3QgeD0iNSIgeT0iMTMiIHdpZHRoPSIyMiIgaGVpZ2h0PSIzIiBmaWxsPSIjNGY2ZWY3Ii8+CiAgPHJlY3QgeD0iMTAiIHk9IjciIHdpZHRoPSIzIiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iMTkiIHk9IjciIHdpZHRoPSIzIiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iOSIgIHk9IjIxIiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiByeD0iMSIgZmlsbD0iIzRmNmVmNyIvPgogIDxyZWN0IHg9IjE0IiB5PSIyMSIgd2lkdGg9IjQiIGhlaWdodD0iNCIgcng9IjEiIGZpbGw9IiM0ZjZlZjciLz4KICA8cmVjdCB4PSIxOSIgeT0iMjEiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHJ4PSIxIiBmaWxsPSIjNGY2ZWY3Ii8+Cjwvc3ZnPg==" />
+<link rel="apple-touch-icon" type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzRmNmVmNyIvPgogIDxyZWN0IHg9IjUiIHk9IjkiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxOCIgcng9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjk1Ii8+CiAgPHJlY3QgeD0iNSIgeT0iOSIgd2lkdGg9IjIyIiBoZWlnaHQ9IjciIHJ4PSIzIiBmaWxsPSIjNGY2ZWY3Ii8+CiAgPHJlY3QgeD0iNSIgeT0iMTMiIHdpZHRoPSIyMiIgaGVpZ2h0PSIzIiBmaWxsPSIjNGY2ZWY3Ii8+CiAgPHJlY3QgeD0iMTAiIHk9IjciIHdpZHRoPSIzIiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iMTkiIHk9IjciIHdpZHRoPSIzIiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iOSIgIHk9IjIxIiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiByeD0iMSIgZmlsbD0iIzRmNmVmNyIvPgogIDxyZWN0IHg9IjE0IiB5PSIyMSIgd2lkdGg9IjQiIGhlaWdodD0iNCIgcng9IjEiIGZpbGw9IiM0ZjZlZjciLz4KICA8cmVjdCB4PSIxOSIgeT0iMjEiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHJ4PSIxIiBmaWxsPSIjNGY2ZWY3Ii8+Cjwvc3ZnPg==" />
+
+<!-- ===== JSON-LD 構造化データ（Googleリッチ検索対応） ===== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "簡単日程調整ツール",
+  "url": "https://simplescheduler-app.netlify.app/",
+  "description": "参加者全員の空き時間をリンクをリレーするだけで集められる無料の日程調整ツール。アカウント不要・サーバー保存なし。バンド練習・飲み会・会議など全員参加が必要なシーンに最適です。",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "JPY"
+  },
+  "featureList": [
+    "アカウント不要",
+    "無料",
+    "全員参加可能な時間帯を自動計算",
+    "リンクをリレーするだけで完結",
+    "サーバー保存なし"
+  ]
+}
+</script>
 <!-- Google 同意モード v2 (Consent Mode v2) -->
 <!-- 登録不要・簡易実装。GDPRなどの同意状態をGoogleに通知します。 -->
 <script>
