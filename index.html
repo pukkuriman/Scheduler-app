@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>日程調整</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f0f14;
+  --surface:  #1a1a23;
+  --surface2: #23232f;
+  --border:   #2f2f3e;
+  --text:     #e8e6f2;
+  --muted:    #7a7a96;
+  --accent:   #6c63ff;
+  --accent2:  #a89dff;
+  --blue:     rgba(99,149,255,0.55);
+  --blue-bdr: #6395ff;
+  --red:      rgba(255,80,80,0.35);
+  --red-bdr:  #ff5050;
+  --radius:   10px;
+  font-family: 'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif;
+}
+body {
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex;
+  justify-content: center; padding: 32px 16px 60px;
+}
+#app { width: 100%; max-width: 780px; }
+.screen { animation: fadeUp .22s ease both; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ボタン */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 7px; padding: 11px 24px;
+  font-size: .92rem; font-weight: 600; cursor: pointer;
+  transition: filter .15s, transform .1s; text-decoration: none;
+}
+.btn:hover  { filter: brightness(1.15); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+/* 設定画面 */
+.setup-screen { max-width: 440px; }
+.app-title {
+  font-size: 2rem; font-weight: 800; letter-spacing: -.03em;
+  background: linear-gradient(120deg, var(--accent2), #d084fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.subtitle { color: var(--muted); font-size: .88rem; margin-bottom: 32px; }
+.setup-form { display: flex; flex-direction: column; gap: 18px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: .82rem; color: var(--muted); }
+.number-row { display: flex; align-items: center; gap: 12px; }
+.num-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.num-btn:hover { background: var(--border); }
+#count-val { font-size: 1.2rem; font-weight: 700; min-width: 24px; text-align: center; }
+
+/* グリッドヘッダー */
+.grid-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.person-label { font-size: 1.25rem; font-weight: 700; }
+.header-hint  { font-size: .81rem; color: var(--muted); margin-top: 4px; }
+.dots { display: flex; gap: 6px; padding-top: 4px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); transition: background .2s; }
+.dot.done   { background: var(--accent); opacity: .5; }
+.dot.active { background: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,.3); }
+
+/* テーブル */
+.schedule-table {
+  width: 100%; border-collapse: collapse;
+  border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+}
+.schedule-table th {
+  background: var(--surface2); font-size: .78rem; color: var(--muted);
+  padding: 8px 10px; text-align: left; font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+.schedule-table td { border-bottom: 1px solid var(--border); vertical-align: middle; }
+.schedule-table tr:last-child td { border-bottom: none; }
+.date-cell {
+  padding: 6px 12px; white-space: nowrap; font-size: .82rem;
+  color: var(--text); min-width: 80px;
+}
+.date-cell .dow { font-size: .72rem; color: var(--muted); }
+.weekend .date-cell { background: rgba(108,99,255,.06); }
+.bar-cell { padding: 6px 12px; width: 100%; }
+
+/* 時間バー */
+.bar-wrap {
+  position: relative; height: 36px; border-radius: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; touch-action: none; overflow: visible;
+}
+.bar-red-left, .bar-red-right {
+  position: absolute; top: 0; height: 100%;
+  background: var(--red);
+  border-top: 1px solid var(--red-bdr); border-bottom: 1px solid var(--red-bdr);
+  pointer-events: none;
+}
+.bar-red-left  { left: 0; border-radius: 5px 0 0 5px; }
+.bar-red-right { right: 0; border-radius: 0 5px 5px 0; }
+.bar-blue {
+  position: absolute; top: 0; height: 100%;
+  background: var(--blue);
+  border-top: 1px solid var(--blue-bdr); border-bottom: 1px solid var(--blue-bdr);
+  pointer-events: none;
+}
+.handle {
+  position: absolute; top: 50%; transform: translate(-50%,-50%);
+  width: 18px; height: 26px; background: var(--blue-bdr);
+  border-radius: 4px; cursor: ew-resize; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.5); transition: background .1s;
+}
+.handle:hover { background: #8ab3ff; }
+.handle::after {
+  content: ''; width: 2px; height: 12px;
+  background: rgba(0,0,0,.35); border-radius: 2px;
+  box-shadow: 3px 0 0 rgba(0,0,0,.35),-3px 0 0 rgba(0,0,0,.35);
+}
+.time-labels {
+  display: flex; justify-content: space-between;
+  font-size: .68rem; color: var(--muted);
+  padding: 2px 0; margin-top: 2px;
+  pointer-events: none; user-select: none;
+}
+.bar-prev {
+  position: absolute; top: 3px; height: calc(100% - 6px);
+  background: rgba(255,255,255,.07); border: 1px dashed rgba(255,255,255,.2);
+  border-radius: 3px; pointer-events: none; z-index: 0;
+}
+
+/* アクションバー */
+.action-bar {
+  display: flex; gap: 10px; justify-content: flex-end;
+  flex-wrap: wrap; margin-top: 20px;
+}
+
+/* シェア画面 */
+.share-screen { display: flex; justify-content: center; padding-top: 40px; }
+.share-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 36px 28px;
+  max-width: 520px; width: 100%; text-align: center;
+}
+.share-card h2 { font-size: 1.2rem; margin-bottom: 10px; }
+.share-hint { color: var(--muted); font-size: .85rem; margin-bottom: 20px; }
+.share-hint strong { color: var(--accent2); }
+.url-row { display: flex; gap: 8px; margin-bottom: 6px; }
+.url-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--muted); padding: 8px 10px;
+  font-size: .74rem; font-family: monospace; outline: none;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.url-len { font-size: .72rem; color: var(--muted); margin-bottom: 14px; }
+.url-len span { color: var(--accent2); font-weight: 600; }
+.btn-copy {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); padding: 8px 14px;
+  font-size: .83rem; cursor: pointer; white-space: nowrap; transition: background .15s;
+}
+.btn-copy:hover { background: var(--border); }
+.copy-fb { font-size: .78rem; color: #4ada82; min-height: 1.1em; margin-bottom: 14px; }
+.open-btn { display: block; margin-top: 4px; width: 100%; }
+
+/* 結果画面 */
+.result-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 18px; }
+.result-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.result-item {
+  display: flex; gap: 16px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 12px 16px;
+}
+.result-date { font-weight: 600; min-width: 110px; }
+.result-time { color: var(--accent2); font-size: .88rem; }
+.no-result { color: var(--muted); margin-bottom: 24px; }
+
+@media (max-width: 480px) {
+  .date-cell { min-width: 60px; font-size: .75rem; }
+  .handle { width: 14px; height: 22px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+// 定数
+// ============================================================
+const FIXED_START  = '2025-03-01';
+const FIXED_END    = '2025-03-31';
+const DAY_LABELS   = ['日','月','火','水','木','金','土'];
+const HOUR_MARKS   = ['0:00','3:00','6:00','9:00','12:00','15:00','18:00','21:00','24:00'];
+const MINS_IN_DAY  = 1440;
+
+// ============================================================
+// ▼▼▼  URL圧縮エンコード  ▼▼▼
+//
+// 方針: 31日 × (startMin + endMin) を最小ビット数に圧縮
+//   - startMin / endMin は 0〜1440 → 11ビットで表現 (2^11=2048)
+//   - 不参加(null)は startMin=endMin=0 の特殊値で表現
+//   - 31日 × 2値 × 11bit = 682bit → Base64URL で約 114文字
+//   - 参加者数(1〜20) は 5bit
+//   - 残り人数(1〜20) は 5bit
+//   - 合計: 692bit → 約 116文字（従来比 約 1/6 以下）
+// ============================================================
+
+// ビット書き込みクラス
+class BitWriter {
+  constructor() { this.bytes = []; this.buf = 0; this.bits = 0; }
+  write(value, nBits) {
+    for (let i = nBits - 1; i >= 0; i--) {
+      this.buf = (this.buf << 1) | ((value >> i) & 1);
+      if (++this.bits === 8) { this.bytes.push(this.buf); this.buf = 0; this.bits = 0; }
+    }
+  }
+  finish() {
+    if (this.bits > 0) { this.bytes.push(this.buf << (8 - this.bits)); }
+    return new Uint8Array(this.bytes);
+  }
+}
+
+// ビット読み出しクラス
+class BitReader {
+  constructor(bytes) { this.bytes = bytes; this.pos = 0; }
+  read(nBits) {
+    let v = 0;
+    for (let i = 0; i < nBits; i++) {
+      const byteIdx = this.pos >> 3;
+      const bitIdx  = 7 - (this.pos & 7);
+      v = (v << 1) | ((this.bytes[byteIdx] >> bitIdx) & 1);
+      this.pos++;
+    }
+    return v;
+  }
+}
+
+// Uint8Array → Base64URL
+function toBase64Url(bytes) {
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// Base64URL → Uint8Array
+function fromBase64Url(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+
+/**
+ * エンコード:
+ *   config: { start, end, total }
+ *   selections: { "YYYY-MM-DD": { startMin, endMin } | null }
+ *   remaining: number
+ * → 短いBase64URL文字列
+ */
+function encodeState(config, selections, remaining) {
+  const dates = dateRange(config.start, config.end);
+  const w = new BitWriter();
+  w.write(config.total - 1, 5);   // 0〜19 (参加者数1〜20)
+  w.write(remaining - 1,    5);   // 0〜19 (残り1〜20) ※0人の場合は結果画面から呼ばない
+  dates.forEach(d => {
+    const sel = selections[d];
+    const s = sel ? sel.startMin : 0;
+    const e = sel ? sel.endMin   : 0;  // null → 0,0 で表現
+    w.write(s, 11);
+    w.write(e, 11);
+  });
+  return toBase64Url(w.finish());
+}
+
+/**
+ * デコード:
+ * → { config, selections, remaining }
+ */
+function decodeState(str) {
+  const bytes = fromBase64Url(str);
+  const r = new BitReader(bytes);
+  const total     = r.read(5) + 1;
+  const remaining = r.read(5) + 1;
+  const config = { start: FIXED_START, end: FIXED_END, total };
+  const dates = dateRange(config.start, config.end);
+  const selections = {};
+  dates.forEach(d => {
+    const s = r.read(11);
+    const e = r.read(11);
+    selections[d] = (s === 0 && e === 0) ? null : { startMin: s, endMin: e };
+  });
+  return { config, selections, remaining };
+}
+
+function buildShareUrl(config, selections, remaining) {
+  const encoded = encodeState(config, selections, remaining);
+  const base = location.origin + location.pathname;
+  return base + '#' + encoded;   // ハッシュ使用 → サーバーに送信されない
+}
+
+function loadFromUrl() {
+  const hash = location.hash.slice(1);
+  if (!hash) return null;
+  try { return decodeState(hash); }
+  catch (e) { console.warn('URL decode error', e); return null; }
+}
+
+// ============================================================
+// ユーティリティ
+// ============================================================
+function dateRange(start, end) {
+  const dates = [], cur = new Date(start + 'T00:00:00'), last = new Date(end + 'T00:00:00');
+  while (cur <= last) { dates.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
+  return dates;
+}
+function minutesToPct(m) { return (m / MINS_IN_DAY) * 100; }
+function pctToMinutes(p) { return Math.round((p / 100) * MINS_IN_DAY); }
+function minsToLabel(m) {
+  return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+}
+function escAttr(s) { return s.replace(/"/g,'&quot;'); }
+
+// ============================================================
+// アプリ起動
+// ============================================================
+const app = document.getElementById('app');
+const state = loadFromUrl();
+state ? showGridScreen(state.config, state.selections, state.remaining) : showSetupScreen();
+
+// hashが変わったときにも対応（ブラウザバック）
+window.addEventListener('hashchange', () => {
+  const s = loadFromUrl();
+  s ? showGridScreen(s.config, s.selections, s.remaining) : showSetupScreen();
+});
+
+// ============================================================
+// 1. 設定画面
+// ============================================================
+function showSetupScreen() {
+  let count = 2;
+  app.innerHTML = `
+    <div class="screen setup-screen">
+      <h1 class="app-title">日程調整</h1>
+      <p class="subtitle">参加者全員の空き時間を集めましょう</p>
+      <div class="setup-form">
+        <div class="field">
+          <label>参加人数（自分含む）</label>
+          <div class="number-row">
+            <button class="num-btn" id="cnt-dn">−</button>
+            <span id="count-val">2</span>
+            <button class="num-btn" id="cnt-up">＋</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="start-btn" style="margin-top:8px">
+          参加可能な時間帯を選ぶ →
+        </button>
+      </div>
+    </div>`;
+
+  const cv = app.querySelector('#count-val');
+  app.querySelector('#cnt-dn').onclick = () => { if(count>2){count--;cv.textContent=count;} };
+  app.querySelector('#cnt-up').onclick = () => { if(count<20){count++;cv.textContent=count;} };
+  app.querySelector('#start-btn').onclick = () => {
+    const config = { start: FIXED_START, end: FIXED_END, total: count };
+    showGridScreen(config, null, count);
+  };
+}
+
+// ============================================================
+// 2. グリッド選択画面
+// ============================================================
+function showGridScreen(config, prevSelections, remaining) {
+  const dates = dateRange(config.start, config.end);
+  const personIndex = config.total - remaining;
+  const isFirst = prevSelections === null;
+
+  // 初期選択値を設定
+  const currentSels = {};
+  dates.forEach(d => {
+    if (isFirst) {
+      currentSels[d] = { startMin: 540, endMin: 1080 }; // 9:00〜18:00
+    } else {
+      const prev = prevSelections[d];
+      currentSels[d] = prev ? { startMin: prev.startMin, endMin: prev.endMin } : null;
+    }
+  });
+
+  const dotsHtml = Array.from({ length: config.total }, (_,i) =>
+    `<span class="dot ${i<personIndex?'done':i===personIndex?'active':''}"></span>`
+  ).join('');
+
+  const rowsHtml = dates.map(d => {
+    const date = new Date(d + 'T00:00:00');
+    const dow = DAY_LABELS[date.getDay()];
+    const isWE = date.getDay()===0 || date.getDay()===6;
+    const prev = isFirst ? null : prevSelections[d];
+    const disabled = !isFirst && !prev;
+    return `
+      <tr class="${isWE?'weekend':''}" data-date="${d}">
+        <td class="date-cell">
+          ${d.slice(5).replace('-','/')}<br>
+          <span class="dow">${dow}</span>
+        </td>
+        <td class="bar-cell">
+          ${disabled
+            ? `<div class="bar-wrap" style="background:rgba(255,80,80,.1);cursor:not-allowed">
+                 <div style="position:absolute;inset:0;display:flex;align-items:center;
+                   justify-content:center;font-size:.72rem;color:var(--muted)">前の人が不参加</div>
+               </div>`
+            : buildBarHtml(d, currentSels[d], prev)
+          }
+          ${disabled?'':`<div class="time-labels">${HOUR_MARKS.map(h=>`<span>${h}</span>`).join('')}</div>`}
+        </td>
+      </tr>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="screen grid-screen">
+      <div class="grid-header">
+        <div>
+          <div class="person-label">${personIndex+1}人目の入力</div>
+          <div class="header-hint">バーの端をドラッグして参加可能な時間帯（青）を調整</div>
+        </div>
+        <div class="dots">${dotsHtml}</div>
+      </div>
+      <table class="schedule-table">
+        <thead><tr>
+          <th style="width:80px">日付</th>
+          <th>参加可能時間帯（青 = 可、赤 = 不可）</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div class="action-bar">
+        <button class="btn btn-secondary" id="reset-btn">リセット</button>
+        <button class="btn btn-primary"   id="next-btn">
+          ${remaining>1 ? 'リンクを生成して次の人へ →' : '結果を見る →'}
+        </button>
+      </div>
+    </div>`;
+
+  // ドラッグ初期化
+  dates.forEach(d => {
+    const wrap = app.querySelector(`tr[data-date="${d}"] .bar-wrap[data-date]`);
+    if (wrap) initBar(wrap, currentSels, d, isFirst ? null : prevSelections[d]);
+  });
+
+  app.querySelector('#reset-btn').onclick = () => showGridScreen(config, prevSelections, remaining);
+
+  app.querySelector('#next-btn').onclick = () => {
+    const andSels = computeAnd(currentSels, prevSelections, isFirst);
+    const nextRemaining = remaining - 1;
+    if (nextRemaining > 0) {
+      const url = buildShareUrl(config, andSels, nextRemaining);
+      showShareScreen(url, nextRemaining);
+    } else {
+      showResultScreen(andSels, config);
+    }
+  };
+}
+
+// ============================================================
+// バーHTML生成
+// ============================================================
+function buildBarHtml(date, sel, prev) {
+  const s = sel ? minutesToPct(sel.startMin) : 0;
+  const e = sel ? minutesToPct(sel.endMin)   : 100;
+  const prevHtml = prev
+    ? `<div class="bar-prev" style="left:${minutesToPct(prev.startMin).toFixed(2)}%;width:${(minutesToPct(prev.endMin)-minutesToPct(prev.startMin)).toFixed(2)}%"></div>`
+    : '';
+  return `
+    <div class="bar-wrap" data-date="${date}" data-start="${sel?sel.startMin:0}" data-end="${sel?sel.endMin:MINS_IN_DAY}">
+      ${prevHtml}
+      <div data-role="red-left"  class="bar-red-left"  style="width:${s.toFixed(2)}%"></div>
+      <div data-role="blue"      class="bar-blue"       style="left:${s.toFixed(2)}%;width:${(e-s).toFixed(2)}%"></div>
+      <div data-role="red-right" class="bar-red-right"  style="width:${(100-e).toFixed(2)}%"></div>
+      <div data-role="handle-l"  class="handle"         style="left:${s.toFixed(2)}%"></div>
+      <div data-role="handle-r"  class="handle"         style="left:${e.toFixed(2)}%"></div>
+      <div data-role="tip" style="position:absolute;bottom:-22px;left:0;font-size:.68rem;
+           color:var(--accent2);white-space:nowrap;pointer-events:none;display:none;z-index:10"></div>
+    </div>`;
+}
+
+// ============================================================
+// ドラッグロジック
+// ============================================================
+function initBar(wrap, currentSels, date, prevSel) {
+  const MIN_GAP  = 15;
+  const clampMin = prevSel ? prevSel.startMin : 0;
+  const clampMax = prevSel ? prevSel.endMin   : MINS_IN_DAY;
+
+  const el = role => wrap.querySelector(`[data-role="${role}"]`);
+
+  function readMins() {
+    return { s: +wrap.dataset.start, e: +wrap.dataset.end };
+  }
+
+  function applyMins(s, e) {
+    s = Math.max(clampMin, Math.min(s, clampMax - MIN_GAP));
+    e = Math.max(s + MIN_GAP, Math.min(e, clampMax));
+    s = Math.min(s, e - MIN_GAP);
+    wrap.dataset.start = s;
+    wrap.dataset.end   = e;
+    currentSels[date]  = { startMin: s, endMin: e };
+    const sp = minutesToPct(s), ep = minutesToPct(e);
+    el('red-left') .style.width = sp.toFixed(2) + '%';
+    el('blue')     .style.left  = sp.toFixed(2) + '%';
+    el('blue')     .style.width = (ep-sp).toFixed(2) + '%';
+    el('red-right').style.width = (100-ep).toFixed(2) + '%';
+    el('handle-l') .style.left  = sp.toFixed(2) + '%';
+    el('handle-r') .style.left  = ep.toFixed(2) + '%';
+    el('tip').textContent = `${minsToLabel(s)} 〜 ${minsToLabel(e)}`;
+  }
+
+  function pctFromEv(ev) {
+    const rect = wrap.getBoundingClientRect();
+    const x = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
+  }
+
+  // ハンドルドラッグ
+  ['handle-l','handle-r'].forEach(role => {
+    const handle = el(role);
+    const isLeft = role === 'handle-l';
+    let dragging = false;
+
+    const onStart = ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      dragging = true;
+      el('tip').style.display = 'block';
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive:false });
+      window.addEventListener('mouseup',   onEnd);
+      window.addEventListener('touchend',  onEnd);
+    };
+    const onMove = ev => {
+      if (!dragging) return;
+      ev.preventDefault();
+      const mins = pctToMinutes(pctFromEv(ev));
+      const { s, e } = readMins();
+      isLeft ? applyMins(mins, e) : applyMins(s, mins);
+    };
+    const onEnd = () => {
+      dragging = false;
+      el('tip').style.display = 'none';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup',   onEnd);
+      window.removeEventListener('touchend',  onEnd);
+    };
+    handle.addEventListener('mousedown',  onStart);
+    handle.addEventListener('touchstart', onStart, { passive:false });
+  });
+
+  // バー本体ドラッグで移動
+  let bd = false, bx = 0, bs = 0, be = 0;
+  wrap.addEventListener('mousedown', ev => {
+    if (ev.target.closest('.handle')) return;
+    bd = true; bx = ev.clientX;
+    const { s, e } = readMins(); bs = s; be = e;
+    el('tip').style.display = 'block';
+    window.addEventListener('mousemove', bMove);
+    window.addEventListener('mouseup',   bEnd);
+  });
+  function bMove(ev) {
+    if (!bd) return;
+    const rect = wrap.getBoundingClientRect();
+    const dm = Math.round(((ev.clientX - bx) / rect.width) * MINS_IN_DAY);
+    applyMins(bs + dm, be + dm);
+  }
+  function bEnd() {
+    bd = false;
+    el('tip').style.display = 'none';
+    window.removeEventListener('mousemove', bMove);
+    window.removeEventListener('mouseup',   bEnd);
+  }
+}
+
+// ============================================================
+// AND計算
+// ============================================================
+function computeAnd(current, prev, isFirst) {
+  if (isFirst) return current;
+  const result = {};
+  Object.keys(current).forEach(d => {
+    const c = current[d], p = prev ? prev[d] : null;
+    if (!c || !p) { result[d] = null; return; }
+    const s = Math.max(c.startMin, p.startMin);
+    const e = Math.min(c.endMin,   p.endMin);
+    result[d] = s < e ? { startMin:s, endMin:e } : null;
+  });
+  return result;
+}
+
+// ============================================================
+// 3. シェア画面
+// ============================================================
+function showShareScreen(url, remaining) {
+  const charCount = url.length;
+  app.innerHTML = `
+    <div class="screen share-screen">
+      <div class="share-card">
+        <div style="font-size:2.2rem;margin-bottom:12px">🔗</div>
+        <h2>リンクを共有してください</h2>
+        <p class="share-hint">あと <strong>${remaining}人</strong> が入力する必要があります</p>
+        <div class="url-row">
+          <input class="url-input" id="share-url" value="${escAttr(url)}" readonly />
+          <button class="btn-copy" id="copy-btn">コピー</button>
+        </div>
+        <p class="url-len">URL長: <span>${charCount}文字</span></p>
+        <p class="copy-fb" id="copy-fb"></p>
+        <a href="${escAttr(url)}" class="btn btn-primary open-btn">次の人のページを開く →</a>
+      </div>
+    </div>`;
+
+  app.querySelector('#copy-btn').onclick = () => {
+    navigator.clipboard.writeText(url)
+      .then(() => {
+        const fb = app.querySelector('#copy-fb');
+        fb.textContent = 'コピーしました！';
+        setTimeout(() => { fb.textContent = ''; }, 2000);
+      })
+      .catch(() => { app.querySelector('#share-url').select(); });
+  };
+}
+
+// ============================================================
+// 4. 結果画面
+// ============================================================
+function showResultScreen(andSels, config) {
+  const dates  = dateRange(config.start, config.end);
+  const okDays = dates.filter(d => andSels[d]);
+
+  const items = okDays.map(d => {
+    const date = new Date(d + 'T00:00:00');
+    const dow  = DAY_LABELS[date.getDay()];
+    const { startMin, endMin } = andSels[d];
+    return `<li class="result-item">
+      <span class="result-date">${d.slice(5).replace('-','/')}（${dow}）</span>
+      <span class="result-time">${minsToLabel(startMin)} 〜 ${minsToLabel(endMin)}</span>
+    </li>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="screen result-screen">
+      <div class="result-title">
+        ${okDays.length ? '✅ 全員参加可能な日程' : '😔 共通の空き時間が見つかりませんでした'}
+      </div>
+      ${okDays.length
+        ? `<ul class="result-list">${items}</ul>`
+        : `<p class="no-result">参加者全員が空いている時間帯がありませんでした。</p>`
+      }
+      <button class="btn btn-secondary" id="restart-btn">最初からやり直す</button>
+    </div>`;
+
+  app.querySelector('#restart-btn').onclick = () => {
+    history.replaceState(null,'', location.pathname);
+    showSetupScreen();
+  };
+}
+</script>
+</body>
+</html>
