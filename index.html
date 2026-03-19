@@ -475,6 +475,85 @@ body {
   width: 100%;
   max-width: 760px;
 }
+
+
+/* ===== お問い合わせモーダル ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: fadeUp .18s ease both;
+}
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0,0,0,.18);
+  padding: 32px 28px;
+  width: 100%; max-width: 460px;
+  position: relative;
+}
+.modal-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.modal-card p  { font-size: .83rem; color: var(--muted); margin-bottom: 20px; line-height: 1.7; }
+.modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none; font-size: 1.4rem;
+  color: var(--muted); cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.modal-field label { font-size: .78rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em; }
+.modal-field textarea, .modal-field input[type="text"] {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 10px 12px;
+  font-size: .9rem; outline: none; font-family: inherit;
+  transition: border-color .15s;
+  resize: vertical;
+}
+.modal-field textarea:focus, .modal-field input[type="text"]:focus {
+  border-color: var(--accent);
+}
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+/* 管理者ページ */
+.admin-screen {
+  max-width: 700px; margin: 0 auto; padding: 36px 20px 80px;
+}
+.admin-msg-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.admin-msg-meta { font-size: .75rem; color: var(--muted); margin-bottom: 6px; }
+.admin-msg-body { font-size: .9rem; line-height: 1.7; white-space: pre-wrap; }
+
+/* 管理者リンク（右下固定） */
+.admin-link {
+  position: fixed; bottom: 10px; right: 14px;
+  font-size: .65rem; color: var(--border2);
+  text-decoration: none; opacity: .4;
+  transition: opacity .2s;
+  z-index: 100;
+}
+.admin-link:hover { opacity: 1; color: var(--muted); }
+
+/* ===== フッター ===== */
+.site-footer {
+  text-align: center;
+  padding: 24px 16px 12px;
+  font-size: .75rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+  line-height: 1.8;
+}
+.site-footer a {
+  color: var(--muted); text-decoration: none;
+  transition: color .15s;
+}
+.site-footer a:hover { color: var(--accent); }
 .top-hero {
   text-align: center;
   margin-bottom: 52px;
@@ -779,6 +858,43 @@ body {
 </head>
 <body>
 <div id="app"></div>
+
+<!-- Netlify Forms 検出用（非表示）: Netlifyがデプロイ時にこのフォームを読み取る -->
+<form name="contact" netlify netlify-honeypot="bot-field" hidden>
+  <input name="name" type="text" />
+  <textarea name="message"></textarea>
+  <input name="bot-field" />
+</form>
+<footer class="site-footer">
+  <div>
+    Copyright &copy; <span id="footer-year"></span>
+    簡単日程調整ツール &nbsp;|&nbsp;
+    <a href="https://simplescheduler-app.netlify.app/" target="_self">ホーム</a>
+    &nbsp;|&nbsp;
+    <a href="#" id="footer-guide-link">使い方</a>
+    &nbsp;|&nbsp;
+    <a href="#" id="footer-contact-link">お問い合わせ</a>
+  </div>
+  <div style="margin-top:4px">
+    無料・登録不要・サーバー保存なし &nbsp;|&nbsp;
+    All data is stored in the URL only. No server-side storage.
+  </div>
+</footer>
+<!-- 管理者リンク（右下固定・目立たない） -->
+<a href="#" id="admin-link" class="admin-link" title="管理者ページ">管理者</a>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // 年を動的に設定
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  document.getElementById('footer-guide-link').onclick = function(e){
+    e.preventDefault(); showGuideScreen();
+  };
+  document.getElementById('footer-contact-link').onclick = function(e){
+    e.preventDefault(); showContactModal();
+  };
+  document.getElementById('admin-link').onclick = function(e){
+    e.preventDefault(); showAdminLogin();
+  };
+</script>
 <script>
 // ============================================================
 // 定数
@@ -976,6 +1092,39 @@ function addDays(dateStr, n){
 }
 
 // ============================================================
+// 開催数カウンター（CountAPI を使用 - 全ユーザー共有）
+// https://api.countapi.xyz - 無料・登録不要・グローバル共有
+// ============================================================
+const COUNT_API = 'https://api.countapi.xyz';
+const COUNT_NS  = 'simplescheduler-app';
+const COUNT_KEY = 'sessions';
+
+// カウントを取得して表示
+async function fetchCount() {
+  try {
+    const res = await fetch(`${COUNT_API}/get/${COUNT_NS}/${COUNT_KEY}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.value || 0;
+  } catch(e) { return null; }
+}
+
+// カウントを+1して新しい値を返す
+async function incrementCount() {
+  try {
+    const res = await fetch(`${COUNT_API}/hit/${COUNT_NS}/${COUNT_KEY}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.value || 0;
+  } catch(e) { return null; }
+}
+
+// 表示用: 3桁カンマ区切り
+function formatCount(n) {
+  return (n == null) ? '---' : Number(n).toLocaleString('ja-JP');
+}
+
+// ============================================================
 // アプリ起動
 // ============================================================
 const app = document.getElementById('app');
@@ -1018,6 +1167,16 @@ function showTopScreen() {
         </button>
       </div>
 
+      <!-- カウンター：ボタンとフィーチャーカードの間 -->
+      <div style="text-align:center;margin:4px 0 20px">
+        <span style="font-size:.78rem;color:var(--muted)">
+          これまでの開催数：
+        </span>
+        <span id="counter-display"
+          style="font-size:.92rem;font-weight:700;color:var(--accent);margin:0 3px">0</span>
+        <span style="font-size:.78rem;color:var(--muted)">件</span>
+      </div>
+
       <div class="top-features">
         <div class="feature-card">
           <div class="feature-icon">📅</div>
@@ -1046,6 +1205,14 @@ function showTopScreen() {
 
   app.querySelector('#top-start-btn').onclick = showSetupScreen;
   app.querySelector('#top-guide-btn').onclick  = showGuideScreen;
+  // カウンター表示（非同期で取得・表示）
+  const counterEl = app.querySelector('#counter-display');
+  counterEl.textContent = '...';
+  fetchCount().then(n => {
+    if (counterEl && counterEl.isConnected) {
+      counterEl.textContent = formatCount(n);
+    }
+  });
   // 広告
   app.querySelector('.top-inner').insertAdjacentHTML('beforeend', adSlotHtml());
   pushAd();
@@ -1900,7 +2067,9 @@ function showPreviewScreen(andSels, config, onBack) {
 
   app.querySelector('#top-back-btn').onclick = showTopScreen;
   app.querySelector('#back-btn').onclick = onBack;
-  app.querySelector('#confirm-btn').onclick = () => {
+  app.querySelector('#confirm-btn').onclick = async () => {
+    // 結果確定時にカウント+1（全ユーザー共有）
+    incrementCount(); // レスポンスを待たずに即遷移
     showResultScreen(andSels, config);
   };
   // 広告
@@ -2074,6 +2243,127 @@ function showResultScreen(andSels, config) {
   app.querySelector('.result-screen').insertAdjacentHTML('beforeend', adSlotHtml());
   pushAd();
 }
+
+// ============================================================
+// お問い合わせフォーム（Netlify Forms 経由）
+// メッセージは Netlify のサーバーに保存され、
+// Netlify 管理画面（https://app.netlify.com）でのみ閲覧可能。
+// パスワードはコードに存在しない。Netlifyアカウントのログインで保護される。
+// ============================================================
+
+function showContactModal() {
+  const old = document.getElementById('contact-modal');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'contact-modal';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+      <h3>お問い合わせ</h3>
+      <p>ご意見・ご要望・不具合報告などをお送りください。<br>
+         いただいたメッセージは管理者が確認します。</p>
+      <div class="modal-field">
+        <label>お名前（任意）</label>
+        <input type="text" id="contact-name" placeholder="匿名でも送れます" maxlength="50" />
+      </div>
+      <div class="modal-field">
+        <label>メッセージ <span style="color:var(--red-bdr)">*</span></label>
+        <textarea id="contact-body" rows="5" maxlength="1000"
+          placeholder="ご自由にお書きください（1000文字以内）"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel-btn">キャンセル</button>
+        <button class="btn btn-primary"   id="modal-send-btn">送信</button>
+      </div>
+      <p id="contact-result"
+         style="font-size:.8rem;margin-top:10px;min-height:1.2em"></p>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  document.getElementById('modal-close-btn').onclick  = close;
+  document.getElementById('modal-cancel-btn').onclick = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  document.getElementById('modal-send-btn').onclick = async () => {
+    const nameEl   = document.getElementById('contact-name');
+    const bodyEl   = document.getElementById('contact-body');
+    const resultEl = document.getElementById('contact-result');
+    const sendBtn  = document.getElementById('modal-send-btn');
+
+    const name = nameEl.value.trim();
+    const body = bodyEl.value.trim();
+
+    if (!body) {
+      resultEl.style.color = 'var(--red-bdr)';
+      resultEl.textContent = 'メッセージを入力してください';
+      return;
+    }
+
+    sendBtn.disabled    = true;
+    sendBtn.textContent = '送信中...';
+    resultEl.textContent = '';
+
+    // Netlify Forms への送信（application/x-www-form-urlencoded 形式）
+    // Content-Type ヘッダーを明示して文字列で送る
+    const params = new URLSearchParams();
+    params.append('form-name', 'contact');
+    params.append('name',      name || '匿名');
+    params.append('message',   body);
+    params.append('bot-field', '');  // ハニーポット（スパム対策）
+
+    try {
+      const res = await fetch('/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    params.toString()
+      });
+
+      if (res.ok) {
+        resultEl.style.color = 'var(--green)';
+        resultEl.textContent = '✓ 送信しました。ありがとうございます！';
+        setTimeout(close, 2200);
+      } else {
+        // Netlify以外の環境（ローカル等）では 405 が返る
+        throw new Error('status ' + res.status);
+      }
+    } catch(e) {
+      // ローカル環境・ネットワークエラー時のフォールバック
+      // → 送信内容をクリップボードにコピーして案内
+      const fallbackText = '【お問い合わせ内容】\nお名前: ' + (name || '匿名') + '\nメッセージ: ' + body;
+      try {
+        await navigator.clipboard.writeText(fallbackText);
+        resultEl.style.color = 'var(--accent)';
+        resultEl.innerHTML   =
+          'Netlify環境以外では自動送信できません。<br>' +
+          '内容をクリップボードにコピーしました。<br>' +
+          '<span style="font-size:.75rem;color:var(--muted)">(' + e.message + ')</span>';
+      } catch(ce) {
+        resultEl.style.color = 'var(--red-bdr)';
+        resultEl.textContent = '送信に失敗しました。Netlifyにデプロイ後にお試しください。';
+      }
+      sendBtn.disabled    = false;
+      sendBtn.textContent = '送信';
+    }
+  };
+}
+
+// ============================================================
+// 管理者リンク → Netlify 管理画面へ直接リンク
+// パスワードはコードに存在しない。Netlifyアカウントで保護される。
+// ============================================================
+function showAdminLogin() {
+  if (confirm('Netlify 管理画面（お問い合わせ一覧）を開きますか？\nNetlifyアカウントへのログインが必要です。')) {
+    window.open(
+      'https://app.netlify.com/sites/simplescheduler-app/forms',
+      '_blank'
+    );
+  }
+}
+
 </script>
 </body>
 </html>
