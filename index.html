@@ -860,10 +860,11 @@ body {
 <div id="app"></div>
 
 <!-- Netlify Forms 検出用（非表示）: Netlifyがデプロイ時にこのフォームを読み取る -->
-<form name="contact" netlify netlify-honeypot="bot-field" hidden>
+<form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="contact" />
   <input name="name" type="text" />
   <textarea name="message"></textarea>
-  <input name="bot-field" />
+  <input name="bot-field" type="text" />
 </form>
 <footer class="site-footer">
   <div>
@@ -2331,22 +2332,22 @@ function showContactModal() {
         throw new Error('status ' + res.status);
       }
     } catch(e) {
-      // ローカル環境・ネットワークエラー時のフォールバック
-      // → 送信内容をクリップボードにコピーして案内
-      const fallbackText = '【お問い合わせ内容】\nお名前: ' + (name || '匿名') + '\nメッセージ: ' + body;
-      try {
-        await navigator.clipboard.writeText(fallbackText);
-        resultEl.style.color = 'var(--accent)';
-        resultEl.innerHTML   =
-          'Netlify環境以外では自動送信できません。<br>' +
-          '内容をクリップボードにコピーしました。<br>' +
-          '<span style="font-size:.75rem;color:var(--muted)">(' + e.message + ')</span>';
-      } catch(ce) {
-        resultEl.style.color = 'var(--red-bdr)';
-        resultEl.textContent = '送信に失敗しました。Netlifyにデプロイ後にお試しください。';
-      }
+      // 送信失敗時: ステータスコードで原因を判別してわかりやすく案内
       sendBtn.disabled    = false;
       sendBtn.textContent = '送信';
+      resultEl.style.color = 'var(--red-bdr)';
+
+      const status = e.message || '';
+      if (status.includes('404') || status.includes('405') || status.includes('500')) {
+        // Netlify管理画面で Form Detection が未有効化の可能性
+        resultEl.innerHTML =
+          '送信に失敗しました（' + status + '）。<br>' +
+          '<span style="font-size:.8rem;color:var(--muted)">' +
+          'Netlify管理画面 → Forms → Enable form detection を有効化し、' +
+          '再度ファイルをアップロードしてください。</span>';
+      } else {
+        resultEl.textContent = '送信に失敗しました。時間をおいて再度お試しください。';
+      }
     }
   };
 }
