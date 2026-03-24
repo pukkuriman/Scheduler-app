@@ -908,7 +908,7 @@ const DAY_LABELS  = ['日','月','火','水','木','金','土'];
 // data-ad-client と data-ad-slot を自分の値に差し替えること。
 // ============================================================
 const AD_CLIENT = 'ca-pub-5684414420026319';
-const AD_SLOT   = '7826149238';          // ← 要変更
+const AD_SLOT   = '7826149238';
 
 function adSlotHtml() {
   return `<div class="ad-slot">
@@ -1093,30 +1093,33 @@ function addDays(dateStr, n){
 }
 
 // ============================================================
-// 開催数カウンター（CountAPI を使用 - 全ユーザー共有）
-// https://api.countapi.xyz - 無料・登録不要・グローバル共有
+// 開催数カウンター（CounterAPI を使用 - 全ユーザー共有）
+// https://counterapi.dev - 無料・登録不要・グローバル共有
 // ============================================================
-const COUNT_API = 'https://api.countapi.xyz';
 const COUNT_NS  = 'simplescheduler-app';
 const COUNT_KEY = 'sessions';
 
 // カウントを取得して表示
 async function fetchCount() {
   try {
-    const res = await fetch(`${COUNT_API}/get/${COUNT_NS}/${COUNT_KEY}`);
+    const res = await fetch(
+      `https://api.counterapi.dev/v1/${COUNT_NS}/${COUNT_KEY}`
+    );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.value || 0;
+    return data.count ?? data.value ?? 0;
   } catch(e) { return null; }
 }
 
-// カウントを+1して新しい値を返す
+// カウントを+1する
 async function incrementCount() {
   try {
-    const res = await fetch(`${COUNT_API}/hit/${COUNT_NS}/${COUNT_KEY}`);
+    const res = await fetch(
+      `https://api.counterapi.dev/v1/${COUNT_NS}/${COUNT_KEY}/up`
+    );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.value || 0;
+    return data.count ?? data.value ?? 0;
   } catch(e) { return null; }
 }
 
