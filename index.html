@@ -1093,37 +1093,33 @@ function addDays(dateStr, n){
 }
 
 // ============================================================
-// 開催数カウンター（CounterAPI を使用 - 全ユーザー共有）
-// https://counterapi.dev - 無料・登録不要・グローバル共有
+// 開催数カウンター（countapi.mileshilliard.com - 全ユーザー共有）
+// countapiの後継サービス・無料・登録不要
 // ============================================================
-const COUNT_NS  = 'simplescheduler-app';
-const COUNT_KEY = 'sessions';
+const COUNT_KEY = 'simplescheduler-app-sessions';
 
-// カウントを取得して表示
 async function fetchCount() {
   try {
     const res = await fetch(
-      `https://api.counterapi.dev/v1/${COUNT_NS}/${COUNT_KEY}`
+      `https://countapi.mileshilliard.com/api/v1/get/${COUNT_KEY}`
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.count ?? data.value ?? 0;
+    return data.value ?? 0;
   } catch(e) { return null; }
 }
 
-// カウントを+1する
 async function incrementCount() {
   try {
     const res = await fetch(
-      `https://api.counterapi.dev/v1/${COUNT_NS}/${COUNT_KEY}/up`
+      `https://countapi.mileshilliard.com/api/v1/hit/${COUNT_KEY}`
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.count ?? data.value ?? 0;
+    return data.value ?? 0;
   } catch(e) { return null; }
 }
 
-// 表示用: 3桁カンマ区切り
 function formatCount(n) {
   return (n == null) ? '---' : Number(n).toLocaleString('ja-JP');
 }
