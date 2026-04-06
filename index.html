@@ -874,6 +874,14 @@ body {
     &nbsp;|&nbsp;
     <a href="#" id="footer-guide-link">使い方</a>
     &nbsp;|&nbsp;
+    <a href="#" id="footer-faq-link">FAQ</a>
+    &nbsp;|&nbsp;
+    <a href="#" id="footer-tokusho-link">特商法表示</a>
+    &nbsp;|&nbsp;
+    <a href="#" id="footer-release-link">更新履歴</a>
+    &nbsp;|&nbsp;
+    <a href="#" id="footer-privacy-link">プライバシーポリシー</a>
+    &nbsp;|&nbsp;
     <a href="#" id="footer-contact-link">お問い合わせ</a>
   </div>
   <div style="margin-top:4px">
@@ -888,6 +896,18 @@ body {
   document.getElementById('footer-year').textContent = new Date().getFullYear();
   document.getElementById('footer-guide-link').onclick = function(e){
     e.preventDefault(); showGuideScreen();
+  };
+  document.getElementById('footer-faq-link').onclick = function(e){
+    e.preventDefault(); showFaqScreen();
+  };
+  document.getElementById('footer-tokusho-link').onclick = function(e){
+    e.preventDefault(); showTokushoScreen();
+  };
+  document.getElementById('footer-release-link').onclick = function(e){
+    e.preventDefault(); showReleaseScreen();
+  };
+  document.getElementById('footer-privacy-link').onclick = function(e){
+    e.preventDefault(); showPrivacyScreen();
   };
   document.getElementById('footer-contact-link').onclick = function(e){
     e.preventDefault(); showContactModal();
@@ -1529,9 +1549,7 @@ function showSetupScreen() {
     const config = { start, end, total: count, step, title };
     showGridScreen(config, null, count);
   };
-  // 広告
-  app.querySelector('.setup-screen').insertAdjacentHTML('beforeend', adSlotHtml());
-  pushAd();
+  // 設定画面は広告なし（フォームのみのためAdSenseポリシー対応）
 }
 
 // ============================================================
@@ -2008,10 +2026,7 @@ function showShareScreen(url, remaining, onBack) {
 
   app.querySelector('#top-back-btn').onclick = showTopScreen;
   app.querySelector('#back-btn').onclick = onBack;
-  // 広告
-  app.querySelector('.share-screen').insertAdjacentHTML('beforeend',
-    '<div style="width:100%;max-width:520px;margin-top:16px">' + adSlotHtml() + '</div>');
-  pushAd();
+  // シェア画面は広告なし（コンテンツ薄いためAdSenseポリシー対応）
 }
 
 // ============================================================
@@ -2068,13 +2083,10 @@ function showPreviewScreen(andSels, config, onBack) {
   app.querySelector('#top-back-btn').onclick = showTopScreen;
   app.querySelector('#back-btn').onclick = onBack;
   app.querySelector('#confirm-btn').onclick = async () => {
-    // 結果確定時にカウント+1（全ユーザー共有）
-    incrementCount(); // レスポンスを待たずに即遷移
+    incrementCount();
     showResultScreen(andSels, config);
   };
-  // 広告
-  app.querySelector('.result-screen').insertAdjacentHTML('beforeend', adSlotHtml());
-  pushAd();
+  // プレビュー画面は広告なし（確認画面のみのためAdSenseポリシー対応）
 }
 
 // ============================================================
@@ -2241,6 +2253,327 @@ function showResultScreen(andSels, config) {
   };
   // 広告
   app.querySelector('.result-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// FAQ画面
+// ============================================================
+function showFaqScreen() {
+  const faqs = [
+    { q: 'URLがとても長くなるのはなぜですか？',
+      a: '入力された日程データをサーバーに保存せず、すべてURLの中に圧縮して格納しているためです。参加者が増えるほどデータ量が増えURLが長くなりますが、動作には問題ありません。' },
+    { q: 'データは安全ですか？サーバーに保存されますか？',
+      a: 'サーバーへの保存は一切行っていません。入力データはブラウザ上でURLに圧縮されるだけです。URLを知っている人だけが内容を確認できます。' },
+    { q: '途中でURLを失くしてしまったらどうなりますか？',
+      a: 'URLを失くした場合、そのデータは復元できません。主催者が最初から設定をやり直す必要があります。大切なURLはメモやブックマークで保管してください。' },
+    { q: '参加者が途中で時間を変えたいと言ったらどうすればいいですか？',
+      a: '現在、入力済みの内容を後から変更する機能はありません。その場合は主催者が最初からやり直す必要があります。' },
+    { q: '最大何人まで使えますか？',
+      a: '最大30人まで対応しています。30人を超える場合はグループを分けてご利用ください。' },
+    { q: '日程調整の期間はどのくらいまで設定できますか？',
+      a: '最大62日間（約2ヶ月）まで設定できます。' },
+    { q: 'スマートフォンでも使えますか？',
+      a: 'はい、スマートフォン・タブレット・PCすべてに対応しています。バーの操作はスマホのタッチ操作でも快適にご利用いただけます。' },
+    { q: '無料で使えますか？登録は必要ですか？',
+      a: '完全無料でご利用いただけます。アカウント登録やログインも不要です。' },
+    { q: 'LINEで共有できますか？',
+      a: 'はい、各画面のシェアボタンからLINE・X（Twitter）・メールなどで共有できます。' },
+    { q: '結果URLはいつまで有効ですか？',
+      a: '結果URLはサーバーに保存されておらず、URL自体に全データが含まれています。URLが存在する限り永久に閲覧できます。' },
+  ];
+
+  const faqHtml = faqs.map((f, i) => `
+    <div class="guide-step" style="flex-direction:column;gap:8px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="guide-step-num" style="background:var(--accent-lt);color:var(--accent);font-size:.85rem">Q</div>
+        <div class="guide-step-title" style="padding-top:3px">${f.q}</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding-left:2px">
+        <div class="guide-step-num" style="background:#e8f5e9;color:#2e7d32;font-size:.85rem;flex-shrink:0">A</div>
+        <div class="guide-step-desc">${f.a}</div>
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    <div class="screen guide-screen">
+      <button class="guide-back-btn" id="faq-back-btn" style="margin-bottom:20px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <div class="guide-hero">
+        <h1>よくある質問</h1>
+        <p>ご不明な点はこちらをご確認ください</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-steps">${faqHtml}</div>
+      </div>
+      <button class="btn btn-secondary" id="faq-back-btn2" style="margin-top:8px;width:100%">
+        トップに戻る
+      </button>
+    </div>`;
+
+  app.querySelector('#faq-back-btn').onclick  = showTopScreen;
+  app.querySelector('#faq-back-btn2').onclick = showTopScreen;
+  app.querySelector('.guide-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 特定商取引法に基づく表示
+// ============================================================
+function showTokushoScreen() {
+  const rows = [
+    { label: 'サービス名',     value: '簡単日程調整ツール' },
+    { label: 'サービスURL',   value: 'https://simplescheduler-app.netlify.app/' },
+    { label: '提供形態',       value: 'Webサービス（無料）' },
+    { label: '運営者',         value: '個人運営' },
+    { label: '所在地',         value: '請求があった場合は遅滞なく開示します' },
+    { label: '連絡先',         value: 'サイト内お問い合わせフォームをご利用ください' },
+    { label: '販売価格',       value: '無料（広告収入により運営）' },
+    { label: '支払方法',       value: '該当なし（無料サービスのため）' },
+    { label: '商品の引渡時期', value: '該当なし（Webサービスのため登録不要で即時利用可能）' },
+    { label: '返品・キャンセル', value: '該当なし（無料サービスのため）' },
+  ];
+
+  const tableHtml = rows.map(r => `
+    <tr>
+      <th style="padding:12px 16px;font-size:.82rem;font-weight:600;color:var(--muted);
+                 background:var(--surface2);white-space:nowrap;border-bottom:1px solid var(--border);
+                 border-right:1px solid var(--border)">${r.label}</th>
+      <td style="padding:12px 16px;font-size:.88rem;border-bottom:1px solid var(--border)">${r.value}</td>
+    </tr>`).join('');
+
+  app.innerHTML = `
+    <div class="screen guide-screen">
+      <button class="guide-back-btn" id="tokusho-back-btn" style="margin-bottom:20px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <div class="guide-hero">
+        <h1>特定商取引法に基づく表示</h1>
+        <p>法律に基づきサービスの運営情報を開示します</p>
+      </div>
+      <div class="guide-section">
+        <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);
+                      border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          ${tableHtml}
+        </table>
+      </div>
+      <button class="btn btn-secondary" id="tokusho-back-btn2" style="margin-top:8px;width:100%">
+        トップに戻る
+      </button>
+    </div>`;
+
+  app.querySelector('#tokusho-back-btn').onclick  = showTopScreen;
+  app.querySelector('#tokusho-back-btn2').onclick = showTopScreen;
+  app.querySelector('.guide-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// 更新履歴（リリースノート）画面
+// ============================================================
+function showReleaseScreen() {
+  const releases = [
+    { ver: 'v1.4', date: '2025年', items: [
+        'プライバシーポリシー・FAQ・特商法表示ページを追加',
+        'Google AdSense対応（審査中）',
+        '広告配置をポリシーに準拠した画面のみに変更',
+      ]
+    },
+    { ver: 'v1.3', date: '2025年', items: [
+        '全ページに「トップに戻る」ボタンを追加',
+        'お問い合わせフォーム（Netlify Forms）を実装',
+        '管理者リンクを右下に追加',
+        'Google 同意モード v2 対応',
+        '開催数カウンター（全ユーザー共有）を追加',
+        'Copyright・フッターを追加',
+      ]
+    },
+    { ver: 'v1.2', date: '2025年', items: [
+        '調整タイトル機能を追加',
+        '結果URLの永久保存・シェア機能を追加',
+        'SNSシェア（LINE・X・メール）対応',
+        'SEO・OGP・ファビコン・JSON-LD設定',
+        'サイト名を「簡単日程調整ツール」に変更',
+      ]
+    },
+    { ver: 'v1.1', date: '2025年', items: [
+        '使い方ガイドページを追加',
+        '参加人数の上限を30人に拡張',
+        'プレビュー画面（確定前確認）を追加',
+        'タイムゾーンバグを修正',
+        'バー操作の安定性を改善',
+      ]
+    },
+    { ver: 'v1.0', date: '2025年', items: [
+        '初回リリース',
+        '日程調整の基本機能（バー操作・リンクリレー・全員の空き時間を自動計算）',
+        '最大20人・最大62日間対応',
+        '1分/5分単位選択',
+      ]
+    },
+  ];
+
+  const relHtml = releases.map(r => `
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;
+                     padding:3px 10px;border-radius:99px">${r.ver}</span>
+        <span style="font-size:.8rem;color:var(--muted)">${r.date}</span>
+      </div>
+      <div class="guide-points">
+        ${r.items.map(item => `
+          <div class="guide-point">
+            <div class="guide-point-dot"></div>
+            <div>${item}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    <div class="screen guide-screen">
+      <button class="guide-back-btn" id="release-back-btn" style="margin-bottom:20px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+      <div class="guide-hero">
+        <h1>更新履歴</h1>
+        <p>バージョンごとの追加・改善内容</p>
+      </div>
+      <div class="guide-section">
+        ${relHtml}
+      </div>
+      <button class="btn btn-secondary" id="release-back-btn2" style="margin-top:8px;width:100%">
+        トップに戻る
+      </button>
+    </div>`;
+
+  app.querySelector('#release-back-btn').onclick  = showTopScreen;
+  app.querySelector('#release-back-btn2').onclick = showTopScreen;
+  app.querySelector('.guide-screen').insertAdjacentHTML('beforeend', adSlotHtml());
+  pushAd();
+}
+
+// ============================================================
+// プライバシーポリシー画面
+// ============================================================
+function showPrivacyScreen() {
+  app.innerHTML = `
+    <div class="screen guide-screen">
+      <button class="guide-back-btn" id="privacy-back-btn" style="margin-bottom:20px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        トップに戻る
+      </button>
+
+      <div class="guide-hero">
+        <h1>プライバシーポリシー</h1>
+        <p>最終更新日：${new Date().getFullYear()}年</p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          基本方針
+        </div>
+        <div class="guide-points">
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>簡単日程調整ツール（以下「当サービス」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めます。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>当サービスは<strong>サーバーへのデータ保存を一切行いません</strong>。入力された日程データはURLに圧縮されてブラウザ上のみで処理されます。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          収集する情報
+        </div>
+        <div class="guide-points">
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div><strong>お問い合わせフォーム：</strong>お名前（任意）とメッセージ内容をNetlify Formsを通じて収集します。収集した情報はお問い合わせへの対応にのみ使用します。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div><strong>開催数カウンター：</strong>「結果を確定する」ボタンを押した回数を外部カウンターAPIに送信します。個人を特定する情報は含まれません。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div><strong>日程調整データ：</strong>参加者が入力した時間帯情報はURLのハッシュ部分に圧縮されます。当サービスのサーバーには保存されません。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+          Google AdSenseについて
+        </div>
+        <div class="guide-points">
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>当サービスはGoogle AdSenseを利用して広告を表示しています。GoogleはCookieを使用してユーザーへの広告配信を行う場合があります。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>Google広告のCookieを無効にするには、<a href="https://www.google.com/settings/ads" target="_blank" rel="noopener" style="color:var(--accent)">Googleの広告設定ページ</a>をご覧ください。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>EEA・英国のユーザーに対しては、Google 同意モード v2 に基づき広告データの収集を制限しています。</div>
+          </div>
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>詳細は<a href="https://policies.google.com/technologies/ads?hl=ja" target="_blank" rel="noopener" style="color:var(--accent)">Googleのポリシーと規約</a>をご参照ください。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          お問い合わせ
+        </div>
+        <div class="guide-points">
+          <div class="guide-point"><div class="guide-point-dot"></div>
+            <div>プライバシーポリシーに関するご質問は、フッターの「お問い合わせ」フォームよりご連絡ください。</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" id="privacy-back-btn2" style="margin-top:8px;width:100%">
+        トップに戻る
+      </button>
+
+      <!-- 広告：プライバシーポリシーはコンテンツが十分あるため掲載可 -->
+    </div>`;
+
+  app.querySelector('#privacy-back-btn').onclick  = showTopScreen;
+  app.querySelector('#privacy-back-btn2').onclick = showTopScreen;
+  app.querySelector('.guide-screen').insertAdjacentHTML('beforeend', adSlotHtml());
   pushAd();
 }
 
