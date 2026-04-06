@@ -857,7 +857,53 @@ body {
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app">
+  <!-- 案C: JSが無効・クローラー向けの静的コンテンツ。JSが読み込まれると即上書きされる -->
+  <div class="screen top-screen">
+    <div class="top-inner">
+      <div class="top-hero">
+        <h1 class="app-title">日程<span>調整</span></h1>
+        <p class="lead">
+          参加者全員の空き時間を<br>
+          リンクをリレーするだけで集められます。<br>
+          アカウント不要・無料・サーバー保存なし。
+        </p>
+      </div>
+      <div class="top-features">
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <div class="feature-title">日付を自由設定</div>
+          <div class="feature-desc">開始日・終了日を自由に決められます</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">リンクをリレー</div>
+          <div class="feature-desc">URLを次の参加者に送るだけで完結</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <div class="feature-title">全員OKを自動抽出</div>
+          <div class="feature-desc">全員が参加可能な時間帯を自動計算</div>
+        </div>
+      </div>
+      <p>バンド練習・飲み会・会議・サークルなど、全員参加が必要なあらゆる場面で活躍します。</p>
+    </div>
+  </div>
+</div>
+<!-- 案A: JS完全無効ユーザー向け -->
+<noscript>
+  <div style="max-width:760px;margin:40px auto;padding:20px;font-family:sans-serif;line-height:1.8">
+    <h1>簡単日程調整ツール</h1>
+    <p>参加者全員の空き時間をリンクをリレーするだけで集められる無料の日程調整ツールです。</p>
+    <p>このサービスをご利用いただくにはJavaScriptを有効にしてください。</p>
+    <ul>
+      <li>アカウント不要・完全無料</li>
+      <li>サーバーへのデータ保存なし</li>
+      <li>最大30人・最大62日間対応</li>
+      <li>バンド練習・飲み会・会議・サークルなどに最適</li>
+    </ul>
+  </div>
+</noscript>
 
 <!-- Netlify Forms 検出用（非表示）: Netlifyがデプロイ時にこのフォームを読み取る -->
 <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
@@ -872,15 +918,15 @@ body {
     簡単日程調整ツール &nbsp;|&nbsp;
     <a href="https://simplescheduler-app.netlify.app/" target="_self">ホーム</a>
     &nbsp;|&nbsp;
-    <a href="#" id="footer-guide-link">使い方</a>
+    <a href="https://simplescheduler-app.netlify.app/guide.html">使い方</a>
     &nbsp;|&nbsp;
-    <a href="#" id="footer-faq-link">FAQ</a>
+    <a href="https://simplescheduler-app.netlify.app/faq.html">FAQ</a>
     &nbsp;|&nbsp;
-    <a href="#" id="footer-tokusho-link">特商法表示</a>
+    <a href="https://simplescheduler-app.netlify.app/tokusho.html">特商法表示</a>
     &nbsp;|&nbsp;
-    <a href="#" id="footer-release-link">更新履歴</a>
+    <a href="https://simplescheduler-app.netlify.app/release.html">更新履歴</a>
     &nbsp;|&nbsp;
-    <a href="#" id="footer-privacy-link">プライバシーポリシー</a>
+    <a href="https://simplescheduler-app.netlify.app/privacy.html">プライバシーポリシー</a>
     &nbsp;|&nbsp;
     <a href="#" id="footer-contact-link">お問い合わせ</a>
   </div>
@@ -894,21 +940,7 @@ body {
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // 年を動的に設定
   document.getElementById('footer-year').textContent = new Date().getFullYear();
-  document.getElementById('footer-guide-link').onclick = function(e){
-    e.preventDefault(); showGuideScreen();
-  };
-  document.getElementById('footer-faq-link').onclick = function(e){
-    e.preventDefault(); showFaqScreen();
-  };
-  document.getElementById('footer-tokusho-link').onclick = function(e){
-    e.preventDefault(); showTokushoScreen();
-  };
-  document.getElementById('footer-release-link').onclick = function(e){
-    e.preventDefault(); showReleaseScreen();
-  };
-  document.getElementById('footer-privacy-link').onclick = function(e){
-    e.preventDefault(); showPrivacyScreen();
-  };
+  // お問い合わせのみフォームをモーダルで開く（他のページは別HTMLファイルへ）
   document.getElementById('footer-contact-link').onclick = function(e){
     e.preventDefault(); showContactModal();
   };
