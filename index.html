@@ -1056,6 +1056,7 @@ body {
   </main>
 </div>
 <!-- 案A: JS完全無効ユーザー向け（noscript） -->
+<!-- JSオフ時のみ表示。通常ユーザーには#app{display:none}で完全に隠れる -->
 <noscript>
   <style>#app{display:none}</style>
   <main style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:'Hiragino Sans','Yu Gothic',sans-serif;line-height:1.9;color:#1a1d2e">
@@ -1073,7 +1074,19 @@ body {
     </ul>
     <h2>対応シーン</h2>
     <p>バンド練習・飲み会・会議・サークル活動・同窓会・旅行計画など、参加者全員が揃う必要があるあらゆるシーンで活用できます。</p>
-    <p><a href="/guide.html">使い方ガイドを見る</a> | <a href="/faq.html">よくある質問</a></p>
+
+    <nav aria-label="サイトナビゲーション" style="margin-top:32px;padding-top:24px;border-top:1px solid #dde0ea">
+      <h2 style="font-size:1rem;margin-bottom:16px">サイトメニュー</h2>
+      <ul style="list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:12px">
+        <li><a href="/guide.html"  style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">使い方ガイド</a></li>
+        <li><a href="/faq.html"    style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">よくある質問（FAQ）</a></li>
+        <li><a href="/about.html"  style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">このツールについて</a></li>
+        <li><a href="/release.html" style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">更新履歴</a></li>
+        <li><a href="/privacy.html" style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">プライバシーポリシー</a></li>
+        <li><a href="/terms.html"   style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">利用規約</a></li>
+        <li><a href="/tokusho.html" style="color:#4f6ef7;text-decoration:none;padding:6px 14px;border:1px solid #4f6ef7;border-radius:6px;display:inline-block">特定商取引法に基づく表示</a></li>
+      </ul>
+    </nav>
   </main>
 </noscript>
 
