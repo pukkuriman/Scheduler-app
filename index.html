@@ -1053,6 +1053,19 @@ body {
         </ul>
       </div>
     </section>
+
+    <!-- クローラー向け非表示ナビ: display:noneでユーザーには見えないがHTMLとして存在 -->
+    <nav aria-label="サイトページ一覧" style="display:none">
+      <ul>
+        <li><a href="/guide.html">使い方ガイド</a></li>
+        <li><a href="/faq.html">よくある質問（FAQ）</a></li>
+        <li><a href="/about.html">このツールについて</a></li>
+        <li><a href="/release.html">更新履歴</a></li>
+        <li><a href="/privacy.html">プライバシーポリシー</a></li>
+        <li><a href="/terms.html">利用規約</a></li>
+        <li><a href="/tokusho.html">特定商取引法に基づく表示</a></li>
+      </ul>
+    </nav>
   </main>
 </div>
 <!-- 案A: JS完全無効ユーザー向け（noscript） -->
@@ -2603,13 +2616,13 @@ function showTokushoScreen() {
 // ============================================================
 function showReleaseScreen() {
   const releases = [
-    { ver: 'v1.4', date: '2025年', items: [
+    { ver: 'v1.4', date: '2026年', items: [
         'プライバシーポリシー・FAQ・特商法表示ページを追加',
         'Google AdSense対応（審査中）',
         '広告配置をポリシーに準拠した画面のみに変更',
       ]
     },
-    { ver: 'v1.3', date: '2025年', items: [
+    { ver: 'v1.3', date: '2026年', items: [
         '全ページに「トップに戻る」ボタンを追加',
         'お問い合わせフォーム（Netlify Forms）を実装',
         '管理者リンクを右下に追加',
@@ -2618,7 +2631,7 @@ function showReleaseScreen() {
         'Copyright・フッターを追加',
       ]
     },
-    { ver: 'v1.2', date: '2025年', items: [
+    { ver: 'v1.2', date: '2026年', items: [
         '調整タイトル機能を追加',
         '結果URLの永久保存・シェア機能を追加',
         'SNSシェア（LINE・X・メール）対応',
@@ -2626,7 +2639,7 @@ function showReleaseScreen() {
         'サイト名を「簡単日程調整ツール」に変更',
       ]
     },
-    { ver: 'v1.1', date: '2025年', items: [
+    { ver: 'v1.1', date: '2026年', items: [
         '使い方ガイドページを追加',
         '参加人数の上限を30人に拡張',
         'プレビュー画面（確定前確認）を追加',
@@ -2634,7 +2647,7 @@ function showReleaseScreen() {
         'バー操作の安定性を改善',
       ]
     },
-    { ver: 'v1.0', date: '2025年', items: [
+    { ver: 'v1.0', date: '2026年', items: [
         '初回リリース',
         '日程調整の基本機能（バー操作・リンクリレー・全員の空き時間を自動計算）',
         '最大20人・最大62日間対応',
